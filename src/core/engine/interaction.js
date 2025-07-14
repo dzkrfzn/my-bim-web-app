@@ -1,5 +1,5 @@
-import { rotateXMatrix, multiplyMatrices, perspectiveMatrix } from './utils.js';
-import { renderCube } from './renderer.js'; // ⬅️ Import fungsi renderCube
+import { rotateXMatrix, multiplyMatrices } from './utils.js';
+import { renderCube, modelMatrix as globalModelMatrix } from './renderer.js';
 
 let isDragging = false;
 let lastX = 0, lastY = 0;
@@ -42,6 +42,6 @@ export function setupInteraction(canvas, gl) {
 
 function renderScene(gl) {
   const modelRotX = rotateXMatrix(rotationX);
-  window.modelMatrix = modelRotX; // Untuk debugging sementara
+  globalModelMatrix.set(modelRotX); // Perbarui modelMatrix global
   renderCube(gl);
 }
