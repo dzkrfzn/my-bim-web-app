@@ -1,4 +1,8 @@
-// Membuat matriks identitas 4x4
+// src/core/engine/utils.js
+
+/**
+ * Membuat matriks identitas 4x4
+ */
 export function createIdentityMatrix() {
   return [
     1, 0, 0, 0,
@@ -8,7 +12,9 @@ export function createIdentityMatrix() {
   ];
 }
 
-// Mengalikan dua matriks 4x4
+/**
+ * Mengalikan dua matriks 4x4
+ */
 export function multiplyMatrices(a, b) {
   const result = new Array(16).fill(0);
   for (let row = 0; row < 4; row++) {
@@ -21,7 +27,9 @@ export function multiplyMatrices(a, b) {
   return result;
 }
 
-// Membuat matriks proyeksi perspektif
+/**
+ * Membuat matriks proyeksi perspektif
+ */
 export function perspectiveMatrix(fov, aspect, near, far) {
   const f = 1.0 / Math.tan(fov / 2);
   return [
@@ -32,7 +40,9 @@ export function perspectiveMatrix(fov, aspect, near, far) {
   ];
 }
 
-// Membuat matriks rotasi di sumbu X
+/**
+ * Membuat matriks rotasi di sumbu X
+ */
 export function rotateXMatrix(angleDeg) {
   const rad = angleDeg * Math.PI / 180;
   const c = Math.cos(rad), s = Math.sin(rad);

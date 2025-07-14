@@ -1,9 +1,20 @@
-import { multiplyMatrices, perspectiveMatrix, rotateXMatrix } from './utils.js';
+// src/core/engine/renderer.js
 
+import {
+  createIdentityMatrix,
+  multiplyMatrices,
+  perspectiveMatrix,
+  rotateXMatrix
+} from './utils.js';
+
+// Matriks global
 export let projectionMatrix = [];
 export let viewMatrix = createIdentityMatrix();
 export let modelMatrix = createIdentityMatrix();
 
+/**
+ * Inisialisasi WebGL
+ */
 export function initWebGL(canvas) {
   const gl = canvas.getContext('webgl');
   if (!gl) {
@@ -12,12 +23,15 @@ export function initWebGL(canvas) {
   }
 
   gl.viewport(0, 0, canvas.width, canvas.height);
-  gl.clearColor(0.1, 0.1, 0.1, 1.0);
+  gl.clearColor(0.1, 0.1, 0.1, 1.0); // Latar belakang abu-abu gelap
   gl.enable(gl.DEPTH_TEST);
 
   return gl;
 }
 
+/**
+ * Render kubus sederhana
+ */
 export function renderCube(gl) {
   // Verteks kubus (koordinat 3D)
   const vertices = new Float32Array([
