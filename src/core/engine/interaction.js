@@ -1,4 +1,7 @@
-import { rotateXMatrix, multiplyMatrices } from './utils.js';
+// src/core/engine/interaction.js
+
+import { rotateXMatrix, multiplyMatrices, perspectiveMatrix } from './utils.js';
+import { renderCube } from './renderer.js'; // ⬅️ Penting! Tambahkan baris ini
 
 let isDragging = false;
 let lastX = 0, lastY = 0;
@@ -34,13 +37,13 @@ export function setupInteraction(canvas, gl) {
   canvas.addEventListener('wheel', (e) => {
     const scale = 0.95;
     const delta = e.deltaY * (e.deltaMode === WheelEvent.DOM_DELTA_LINE ? 10 : 1);
-    const fov = 45 * (delta > 0 ? scale : 1/scale);
+    const fov = 45 * (delta > 0 ? scale : 1 / scale);
     renderScene(gl);
   });
 }
 
 function renderScene(gl) {
   const modelRotX = rotateXMatrix(rotationX);
-  window.modelMatrix = modelRotX;
-  renderCube(gl);
+  window.modelMatrix = modelRotX; // ⚠️ Hanya untuk debugging — bisa dipindahkan nanti
+  renderCube(gl); // ✅ Sekarang fungsi ini tersedia
 }
