@@ -1,10 +1,8 @@
-import { rotateXMatrix, multiplyMatrices } from './utils.js';
 import { state } from './state.js';
 import { renderCube } from './renderer.js';
 
 let isDragging = false;
 let lastX = 0, lastY = 0;
-let rotationX = 0;
 
 export function setupInteraction(canvas, gl) {
   canvas.addEventListener('mousedown', (e) => {
@@ -18,11 +16,12 @@ export function setupInteraction(canvas, gl) {
     const dx = e.clientX - lastX;
     const dy = e.clientY - lastY;
 
-    rotationX += dy * 0.5;
+    state.rotation.y += dx * 0.5;
+    state.rotation.x += dy * 0.5;
 
     lastX = e.clientX;
     lastY = e.clientY;
-    renderScene(gl);
+    renderCube(gl);
   });
 
   canvas.addEventListener('mouseup', () => {
@@ -32,9 +31,11 @@ export function setupInteraction(canvas, gl) {
   canvas.addEventListener('mouseleave', () => {
     isDragging = false;
   });
-}
 
-function renderScene(gl) {
-  state.modelMatrix = rotateXMatrix(rotationX);
-  renderCube(gl);
+  canvas.addEventListener('wheel', (e) => {
+    const delta = Math.sign(e.deltaY);
+    state.zoom += delta * 0.5;
+    state.viewMatrix[14] = state.zoom;
+    renderCube(gl);
+  });
 }

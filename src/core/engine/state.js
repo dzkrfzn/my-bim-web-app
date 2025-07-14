@@ -10,5 +10,11 @@ export const state = {
     0, 0, 1, 0,
     0, 0, -5, 1
   ],
-  projectionMatrix: []
+  projectionMatrix: [],
+  rotation: {
+    x: 0,
+    y: 0,
+    z: 0
+  },
+  zoom: -5 // Z awal untuk zoom
 };

@@ -16,13 +16,14 @@ export function initWebGL(canvas) {
 }
 
 export function renderCube(gl) {
-  // Verteks dan indeks seperti sebelumnya
   const vertices = new Float32Array([
+    // Depan
     -0.5, -0.5,  0.5,
      0.5, -0.5,  0.5,
      0.5,  0.5,  0.5,
     -0.5,  0.5,  0.5,
 
+    // Belakang
     -0.5, -0.5, -0.5,
      0.5, -0.5, -0.5,
      0.5,  0.5, -0.5,
@@ -30,12 +31,12 @@ export function renderCube(gl) {
   ]);
 
   const indices = new Uint16Array([
-    0, 1, 2, 0, 2, 3,
-    1, 5, 6, 1, 6, 2,
-    5, 4, 7, 5, 7, 6,
-    4, 0, 3, 4, 3, 7,
-    3, 2, 6, 3, 6, 7,
-    4, 5, 1, 4, 1, 0,
+    0, 1, 2, 0, 2, 3, // Depan
+    1, 5, 6, 1, 6, 2, // Kanan
+    5, 4, 7, 5, 7, 6, // Belakang
+    4, 0, 3, 4, 3, 7, // Kiri
+    3, 2, 6, 3, 6, 7, // Atas
+    4, 5, 1, 4, 1, 0, // Bawah
   ]);
 
   const vertexBuffer = gl.createBuffer();
@@ -56,7 +57,7 @@ export function renderCube(gl) {
 
   const fsSource = `
     void main() {
-      gl_FragColor = vec4(1.0, 0.5, 0.0, 1.0);
+      gl_FragColor = vec4(1.0, 0.5, 0.0, 1.0); // Oranye
     }
   `;
 
@@ -83,6 +84,15 @@ export function renderCube(gl) {
 
   const aspect = gl.canvas.width / gl.canvas.height;
   state.projectionMatrix = perspectiveMatrix(45, aspect, 0.1, 100);
+
+  let rotX = rotateXMatrix(state.rotation.x);
+  let rotY = rotateYMatrix(state.rotation.y);
+  let rotZ = rotateZMatrix(state.rotation.z);
+
+  let rotXY = multiplyMatrices(rotX, rotY);
+  let rotXYZ = multiplyMatrices(rotXY, rotZ);
+
+  state.modelMatrix = rotXYZ;
 
   let mv = multiplyMatrices(state.viewMatrix, state.modelMatrix);
   let mvp = multiplyMatrices(state.projectionMatrix, mv);
