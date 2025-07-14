@@ -1,5 +1,11 @@
 import { state } from './state.js';
-import { multiplyMatrices, perspectiveMatrix } from './utils.js';
+import {
+  multiplyMatrices,
+  perspectiveMatrix,
+  rotateXMatrix,
+  rotateYMatrix,
+  rotateZMatrix
+} from './utils.js';
 
 export function initWebGL(canvas) {
   const gl = canvas.getContext('webgl');
@@ -16,14 +22,13 @@ export function initWebGL(canvas) {
 }
 
 export function renderCube(gl) {
+  // Verteks dan indeks seperti sebelumnya...
   const vertices = new Float32Array([
-    // Depan
     -0.5, -0.5,  0.5,
      0.5, -0.5,  0.5,
      0.5,  0.5,  0.5,
     -0.5,  0.5,  0.5,
 
-    // Belakang
     -0.5, -0.5, -0.5,
      0.5, -0.5, -0.5,
      0.5,  0.5, -0.5,
@@ -31,12 +36,12 @@ export function renderCube(gl) {
   ]);
 
   const indices = new Uint16Array([
-    0, 1, 2, 0, 2, 3, // Depan
-    1, 5, 6, 1, 6, 2, // Kanan
-    5, 4, 7, 5, 7, 6, // Belakang
-    4, 0, 3, 4, 3, 7, // Kiri
-    3, 2, 6, 3, 6, 7, // Atas
-    4, 5, 1, 4, 1, 0, // Bawah
+    0, 1, 2, 0, 2, 3,
+    1, 5, 6, 1, 6, 2,
+    5, 4, 7, 5, 7, 6,
+    4, 0, 3, 4, 3, 7,
+    3, 2, 6, 3, 6, 7,
+    4, 5, 1, 4, 1, 0,
   ]);
 
   const vertexBuffer = gl.createBuffer();
