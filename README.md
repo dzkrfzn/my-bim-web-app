@@ -19,13 +19,13 @@ Proyek ini bertujuan untuk membangun website dengan kemampuan kompleks yang menc
 
 ---
 
-## Tahap 1 - Initial Setup
-### Struktur Direktori
-- `/src`
-  - `/core`: Modul inti aplikasi.
-  - `/data`: Manajemen data dan integrasi IFC.
-  - `/frontend`: Antarmuka pengguna dan visualisasi.
-  - `/backend`: Logika server dan API.
+## Tahap 2 - Core Engine
+### Core Engine
+Modul ini bertanggung jawab untuk rendering 3D dasar dan interaksi. Fitur utama:
+- Rendering objek geometri primitif (kubus).
+- Interaksi dasar: zoom, rotasi, translasi.
+- Pendekatan modular untuk integrasi dengan modul lain.
+
 
 ---
 
