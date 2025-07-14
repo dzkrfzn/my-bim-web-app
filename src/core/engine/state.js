@@ -1,5 +1,3 @@
-// src/core/engine/state.js
-
 import { createIdentityMatrix } from './utils.js';
 
 export const state = {
@@ -16,5 +14,5 @@ export const state = {
     y: 0,
     z: 0
   },
-  zoom: -5 // Z awal untuk zoom
+  zoom: -5
 };
