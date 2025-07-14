@@ -19,7 +19,8 @@ Proyek ini bertujuan untuk membangun website dengan kemampuan kompleks yang menc
 
 ---
 
-## Struktur Direktori (Tahap 1)
+## Tahap 1 - Initial Setup
+### Struktur Direktori
 - `/src`
   - `/core`: Modul inti aplikasi.
   - `/data`: Manajemen data dan integrasi IFC.
