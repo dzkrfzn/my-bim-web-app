@@ -1,5 +1,3 @@
-// src/core/engine/renderer.js
-
 import {
   createIdentityMatrix,
   multiplyMatrices,
@@ -7,14 +5,16 @@ import {
   rotateXMatrix
 } from './utils.js';
 
-// Matriks global
+// Matriks view (kamera) dipindahkan mundur agar kubus terlihat
 export let projectionMatrix = [];
-export let viewMatrix = createIdentityMatrix();
+export let viewMatrix = [
+  1, 0, 0, 0,
+  0, 1, 0, 0,
+  0, 0, 1, 0,
+  0, 0, -5, 1 // Kamera mundur ke belakang
+];
 export let modelMatrix = createIdentityMatrix();
 
-/**
- * Inisialisasi WebGL
- */
 export function initWebGL(canvas) {
   const gl = canvas.getContext('webgl');
   if (!gl) {
@@ -24,16 +24,13 @@ export function initWebGL(canvas) {
 
   gl.viewport(0, 0, canvas.width, canvas.height);
   gl.clearColor(0.1, 0.1, 0.1, 1.0); // Latar belakang abu-abu gelap
-  gl.enable(gl.DEPTH_TEST);
+  gl.enable(gl.DEPTH_TEST);         // Aktifkan depth test
 
   return gl;
 }
 
-/**
- * Render kubus sederhana
- */
 export function renderCube(gl) {
-  // Verteks kubus (koordinat 3D)
+  // Verteks kubus
   const vertices = new Float32Array([
     // Depan
     -0.5, -0.5,  0.5,
@@ -81,7 +78,6 @@ export function renderCube(gl) {
   gl.shaderSource(vertexShader, vsSource);
   gl.compileShader(vertexShader);
 
-  // Validasi kompilasi vertex shader
   if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
     console.error("Vertex shader gagal dikompilasi:", gl.getShaderInfoLog(vertexShader));
     gl.deleteShader(vertexShader);
@@ -91,7 +87,7 @@ export function renderCube(gl) {
   // Fragment Shader
   const fsSource = `
     void main() {
-      gl_FragColor = vec4(0.2, 0.6, 1.0, 1.0); // Biru terang
+      gl_FragColor = vec4(1.0, 0.5, 0.0, 1.0); // 🟠 Oranye agar kontras
     }
   `;
 
@@ -99,7 +95,6 @@ export function renderCube(gl) {
   gl.shaderSource(fragmentShader, fsSource);
   gl.compileShader(fragmentShader);
 
-  // Validasi kompilasi fragment shader
   if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
     console.error("Fragment shader gagal dikompilasi:", gl.getShaderInfoLog(fragmentShader));
     gl.deleteShader(fragmentShader);
@@ -112,7 +107,6 @@ export function renderCube(gl) {
   gl.attachShader(program, fragmentShader);
   gl.linkProgram(program);
 
-  // Validasi link program
   if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
     console.error("Program gagal dilink:", gl.getProgramInfoLog(program));
     gl.deleteProgram(program);
