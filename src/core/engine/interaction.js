@@ -1,25 +1,46 @@
-// File: `/src/core/engine/interaction.js`
-export function setupInteraction(canvas, gl, matrix) {
-    let isDragging = false;
-    let lastX = 0, lastY = 0;
+import { rotateXMatrix, multiplyMatrices } from './utils.js';
 
-    canvas.addEventListener('mousedown', (event) => {
-        isDragging = true;
-        lastX = event.clientX;
-        lastY = event.clientY;
-    });
+let isDragging = false;
+let lastX = 0, lastY = 0;
+let rotationX = 0;
 
-    canvas.addEventListener('mousemove', (event) => {
-        if (!isDragging) return;
-        const deltaX = event.clientX - lastX;
-        const deltaY = event.clientY - lastY;
-        matrix = rotateXMatrix(matrix, deltaY * 0.5);
-        lastX = event.clientX;
-        lastY = event.clientY;
-        renderCube(gl); // Re-render setelah perubahan
-    });
+export function setupInteraction(canvas, gl) {
+  canvas.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    lastX = e.clientX;
+    lastY = e.clientY;
+  });
 
-    canvas.addEventListener('mouseup', () => {
-        isDragging = false;
-    });
+  canvas.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const dx = e.clientX - lastX;
+    const dy = e.clientY - lastY;
+
+    rotationX += dy * 0.5;
+
+    lastX = e.clientX;
+    lastY = e.clientY;
+    renderScene(gl);
+  });
+
+  canvas.addEventListener('mouseup', () => {
+    isDragging = false;
+  });
+
+  canvas.addEventListener('mouseleave', () => {
+    isDragging = false;
+  });
+
+  canvas.addEventListener('wheel', (e) => {
+    const scale = 0.95;
+    const delta = e.deltaY * (e.deltaMode === WheelEvent.DOM_DELTA_LINE ? 10 : 1);
+    const fov = 45 * (delta > 0 ? scale : 1/scale);
+    renderScene(gl);
+  });
+}
+
+function renderScene(gl) {
+  const modelRotX = rotateXMatrix(rotationX);
+  window.modelMatrix = modelRotX;
+  renderCube(gl);
 }

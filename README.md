@@ -20,11 +20,21 @@ Proyek ini bertujuan untuk membangun website dengan kemampuan kompleks yang menc
 ---
 
 ## Tahap 2 - Core Engine
-### Core Engine
-Modul ini bertanggung jawab untuk rendering 3D dasar dan interaksi. Fitur utama:
-- Rendering objek geometri primitif (kubus).
-- Interaksi dasar: zoom, rotasi, translasi.
-- Pendekatan modular untuk integrasi dengan modul lain.
+Modul ini bertujuan untuk mengimplementasikan engine rendering 3D dasar menggunakan JavaScript murni dan WebGL tanpa library eksternal.
+
+### Fitur Utama:
+- Rendering kubus primitif menggunakan WebGL.
+- Interaksi dasar: rotasi dan zoom.
+- Pendekatan modular untuk integrasi tahap selanjutnya.
+
+### Teknologi Digunakan:
+- WebGL API
+- JavaScript ES6 Modules
+- Canvas 2D/3D
+
+### Catatan:
+- Shader dikompilasi secara manual.
+- Transformasi dilakukan menggunakan matrix 4x4.
 
 
 ---
