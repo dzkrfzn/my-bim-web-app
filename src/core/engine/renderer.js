@@ -8,7 +8,15 @@ import {
 } from './utils.js';
 
 export function initWebGL(canvas) {
-  const gl = canvas.getContext('webgl');
+  const devicePixelRatio = window.devicePixelRatio || 1;
+  canvas.width = canvas.clientWidth * devicePixelRatio;
+  canvas.height = canvas.clientHeight * devicePixelRatio;
+
+  const gl = canvas.getContext('webgl', {
+    antialias: true,
+    preserveDrawingBuffer: true
+  });
+
   if (!gl) {
     console.error("WebGL tidak didukung.");
     return null;
@@ -22,8 +30,8 @@ export function initWebGL(canvas) {
 }
 
 export function renderCube(gl) {
-  // Verteks dan indeks seperti sebelumnya...
   const vertices = new Float32Array([
+    // Verteks seperti sebelumnya...
     -0.5, -0.5,  0.5,
      0.5, -0.5,  0.5,
      0.5,  0.5,  0.5,
@@ -62,7 +70,7 @@ export function renderCube(gl) {
 
   const fsSource = `
     void main() {
-      gl_FragColor = vec4(1.0, 0.5, 0.0, 1.0); // Oranye
+      gl_FragColor = vec4(1.0, 0.5, 0.0, 1.0); // Oranye jernih
     }
   `;
 
@@ -82,7 +90,6 @@ export function renderCube(gl) {
 
   const positionAttrib = gl.getAttribLocation(program, "aPosition");
   gl.enableVertexAttribArray(positionAttrib);
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
   gl.vertexAttribPointer(positionAttrib, 3, gl.FLOAT, false, 0, 0);
 
   const uMatrix = gl.getUniformLocation(program, "uMatrix");
