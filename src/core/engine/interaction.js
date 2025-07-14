@@ -5,6 +5,7 @@ let isDragging = false;
 let lastX = 0, lastY = 0;
 
 export function setupInteraction(canvas, gl) {
+  // Rotasi bebas
   canvas.addEventListener('mousedown', (e) => {
     isDragging = true;
     lastX = e.clientX;
@@ -32,9 +33,16 @@ export function setupInteraction(canvas, gl) {
     isDragging = false;
   });
 
+  // ✅ Perbaikan: Scroll depan = zoom in, scroll belakang = zoom out
   canvas.addEventListener('wheel', (e) => {
     const delta = Math.sign(e.deltaY);
-    state.zoom += delta * 0.5;
+    const zoomSpeed = 0.25; // Kecepatan zoom
+    const minZoom = -8;
+    const maxZoom = -2;
+
+    state.zoom -= delta * zoomSpeed; // Invers arah scroll
+    state.zoom = Math.max(Math.min(state.zoom, maxZoom), minZoom); // Batas zoom
+
     state.viewMatrix[14] = state.zoom;
     renderCube(gl);
   });
