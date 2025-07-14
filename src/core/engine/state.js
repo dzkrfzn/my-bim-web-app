@@ -6,7 +6,7 @@ export const state = {
     1, 0, 0, 0,
     0, 1, 0, 0,
     0, 0, 1, 0,
-    0, 0, -5, 1
+    0, 0, -5, 1 // Z awal
   ],
   projectionMatrix: [],
   rotation: {
@@ -14,5 +14,9 @@ export const state = {
     y: 0,
     z: 0
   },
-  zoom: -5
+  zoom: -5,
+  pan: {
+    x: 0,
+    y: 0
+  }
 };

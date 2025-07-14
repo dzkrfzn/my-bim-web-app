@@ -1,47 +1,78 @@
 import { state } from './state.js';
 import { renderCube } from './renderer.js';
 
-let isDragging = false;
+let isRotateDragging = false;
+let isPanDragging = false;
 let lastX = 0, lastY = 0;
 
 export function setupInteraction(canvas, gl) {
-  // Rotasi bebas
+  // Rotasi: klik kiri + drag
   canvas.addEventListener('mousedown', (e) => {
-    isDragging = true;
+    if (e.button === 0) { // Klik kiri
+      isRotateDragging = true;
+    }
+    lastX = e.clientX;
+    lastY = e.clientY;
+  });
+
+  // Pan: Shift + klik kiri / klik tengah + drag
+  canvas.addEventListener('mousedown', (e) => {
+    if (e.button === 1 || (e.button === 0 && e.shiftKey)) {
+      isPanDragging = true;
+    }
     lastX = e.clientX;
     lastY = e.clientY;
   });
 
   canvas.addEventListener('mousemove', (e) => {
-    if (!isDragging) return;
-    const dx = e.clientX - lastX;
-    const dy = e.clientY - lastY;
+    if (isRotateDragging) {
+      const dx = e.clientX - lastX;
+      const dy = e.clientY - lastY;
 
-    state.rotation.y += dx * 0.5;
-    state.rotation.x += dy * 0.5;
+      state.rotation.y += dx * 0.5;
+      state.rotation.x += dy * 0.5;
+
+      renderCube(gl);
+    }
+
+    if (isPanDragging) {
+      const dx = e.clientX - lastX;
+      const dy = e.clientY - lastY;
+
+      // Update translasi di view matrix
+      state.pan.x += dx * 0.01;
+      state.pan.y -= dy * 0.01;
+
+      // Perbarui view matrix
+      state.viewMatrix[12] = state.pan.x;
+      state.viewMatrix[13] = state.pan.y;
+
+      renderCube(gl);
+    }
 
     lastX = e.clientX;
     lastY = e.clientY;
-    renderCube(gl);
   });
 
-  canvas.addEventListener('mouseup', () => {
-    isDragging = false;
+  canvas.addEventListener('mouseup', (e) => {
+    if (e.button === 0) isRotateDragging = false;
+    if (e.button === 1 || (e.button === 0 && e.shiftKey)) isPanDragging = false;
   });
 
   canvas.addEventListener('mouseleave', () => {
-    isDragging = false;
+    isRotateDragging = false;
+    isPanDragging = false;
   });
 
-  // ✅ Perbaikan: Scroll depan = zoom in, scroll belakang = zoom out
+  // Zoom via scroll
   canvas.addEventListener('wheel', (e) => {
     const delta = Math.sign(e.deltaY);
-    const zoomSpeed = 0.25; // Kecepatan zoom
+    const zoomSpeed = 0.25;
     const minZoom = -8;
     const maxZoom = -2;
 
-    state.zoom -= delta * zoomSpeed; // Invers arah scroll
-    state.zoom = Math.max(Math.min(state.zoom, maxZoom), minZoom); // Batas zoom
+    state.zoom -= delta * zoomSpeed;
+    state.zoom = Math.max(Math.min(state.zoom, maxZoom), minZoom);
 
     state.viewMatrix[14] = state.zoom;
     renderCube(gl);
