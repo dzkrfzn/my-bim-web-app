@@ -1,4 +1,4 @@
-import { initWebGL, renderCube } from './renderer.js';
+import { initWebGL } from './renderer.js';
 import { setupInteraction } from './interaction.js';
 
 document.addEventListener('DOMContentLoaded', () => {

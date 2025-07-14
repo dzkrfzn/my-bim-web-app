@@ -1,19 +1,5 @@
-import {
-  createIdentityMatrix,
-  multiplyMatrices,
-  perspectiveMatrix,
-  rotateXMatrix
-} from './utils.js';
-
-// Matriks global
-export let projectionMatrix = [];
-export let viewMatrix = [
-  1, 0, 0, 0,
-  0, 1, 0, 0,
-  0, 0, 1, 0,
-  0, 0, -5, 1
-];
-export let modelMatrix = createIdentityMatrix();
+import { state } from './state.js';
+import { multiplyMatrices, perspectiveMatrix } from './utils.js';
 
 export function initWebGL(canvas) {
   const gl = canvas.getContext('webgl');
@@ -32,13 +18,11 @@ export function initWebGL(canvas) {
 export function renderCube(gl) {
   // Verteks dan indeks seperti sebelumnya
   const vertices = new Float32Array([
-    // Depan
     -0.5, -0.5,  0.5,
      0.5, -0.5,  0.5,
      0.5,  0.5,  0.5,
     -0.5,  0.5,  0.5,
 
-    // Belakang
     -0.5, -0.5, -0.5,
      0.5, -0.5, -0.5,
      0.5,  0.5, -0.5,
@@ -46,15 +30,14 @@ export function renderCube(gl) {
   ]);
 
   const indices = new Uint16Array([
-    0, 1, 2, 0, 2, 3, // Depan
-    1, 5, 6, 1, 6, 2, // Kanan
-    5, 4, 7, 5, 7, 6, // Belakang
-    4, 0, 3, 4, 3, 7, // Kiri
-    3, 2, 6, 3, 6, 7, // Atas
-    4, 5, 1, 4, 1, 0, // Bawah
+    0, 1, 2, 0, 2, 3,
+    1, 5, 6, 1, 6, 2,
+    5, 4, 7, 5, 7, 6,
+    4, 0, 3, 4, 3, 7,
+    3, 2, 6, 3, 6, 7,
+    4, 5, 1, 4, 1, 0,
   ]);
 
-  // Buat buffer vertex
   const vertexBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
@@ -63,7 +46,6 @@ export function renderCube(gl) {
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
 
-  // Vertex Shader
   const vsSource = `
     attribute vec3 aPosition;
     uniform mat4 uMatrix;
@@ -74,7 +56,7 @@ export function renderCube(gl) {
 
   const fsSource = `
     void main() {
-      gl_FragColor = vec4(1.0, 0.5, 0.0, 1.0); // Oranye
+      gl_FragColor = vec4(1.0, 0.5, 0.0, 1.0);
     }
   `;
 
@@ -99,15 +81,12 @@ export function renderCube(gl) {
 
   const uMatrix = gl.getUniformLocation(program, "uMatrix");
 
-  // Update camera
   const aspect = gl.canvas.width / gl.canvas.height;
-  projectionMatrix = perspectiveMatrix(45, aspect, 0.1, 100);
+  state.projectionMatrix = perspectiveMatrix(45, aspect, 0.1, 100);
 
-  // Gabungkan matriks ModelViewProjection
-  let mv = multiplyMatrices(viewMatrix, modelMatrix);
-  let mvp = multiplyMatrices(projectionMatrix, mv);
+  let mv = multiplyMatrices(state.viewMatrix, state.modelMatrix);
+  let mvp = multiplyMatrices(state.projectionMatrix, mv);
 
-  // Kirim ke shader
   gl.uniformMatrix4fv(uMatrix, false, new Float32Array(mvp));
 
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);

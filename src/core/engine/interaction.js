@@ -1,5 +1,6 @@
 import { rotateXMatrix, multiplyMatrices } from './utils.js';
-import { renderCube, modelMatrix as globalModelMatrix } from './renderer.js';
+import { state } from './state.js';
+import { renderCube } from './renderer.js';
 
 let isDragging = false;
 let lastX = 0, lastY = 0;
@@ -31,17 +32,9 @@ export function setupInteraction(canvas, gl) {
   canvas.addEventListener('mouseleave', () => {
     isDragging = false;
   });
-
-  canvas.addEventListener('wheel', (e) => {
-    const scale = 0.95;
-    const delta = e.deltaY * (e.deltaMode === WheelEvent.DOM_DELTA_LINE ? 10 : 1);
-    const fov = 45 * (delta > 0 ? scale : 1 / scale);
-    renderScene(gl);
-  });
 }
 
 function renderScene(gl) {
-  const modelRotX = rotateXMatrix(rotationX);
-  globalModelMatrix.set(modelRotX); // Perbarui modelMatrix global
+  state.modelMatrix = rotateXMatrix(rotationX);
   renderCube(gl);
 }
