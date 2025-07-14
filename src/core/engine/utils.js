@@ -1,5 +1,3 @@
-// src/core/engine/utils.js
-
 /**
  * Membuat matriks identitas 4x4
  */
