@@ -1,5 +1,8 @@
+// src/core/engine/index.js
+
 import { initWebGL } from './renderer.js';
 import { setupInteraction } from './interaction.js';
+import { renderCube } from './renderer.js'; // ⬅️ Penting! Tambahkan baris ini
 
 document.addEventListener('DOMContentLoaded', () => {
   const canvas = document.getElementById('webgl-canvas');
@@ -9,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupInteraction(canvas, gl);
 
   function renderLoop() {
-    renderCube(gl);
+    renderCube(gl); // ✅ Sekarang fungsi ini tersedia
     requestAnimationFrame(renderLoop);
   }
 
