@@ -5,7 +5,6 @@ import {
   rotateXMatrix,
   rotateYMatrix,
   rotateZMatrix,
-  lookAt, // ✅ Sudah tersedia setelah update utils.js
 } from "./utils.js";
 
 export function initWebGL(canvas) {
@@ -27,8 +26,7 @@ export function initWebGL(canvas) {
 }
 
 export function renderCube(gl) {
-  // Verteks & indeks seperti sebelumnya...
-
+  // Verteks dan indeks seperti sebelumnya...
   const vertices = new Float32Array([
     -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5,
 
@@ -82,6 +80,7 @@ export function renderCube(gl) {
 
   const uMatrix = gl.getUniformLocation(program, "uMatrix");
 
+  // ⬇️ PENTING: Rekomputasi semua matriks setiap kali renderCube dipanggil
   const aspect = gl.canvas.width / gl.canvas.height;
   state.projectionMatrix = perspectiveMatrix(45, aspect, 0.1, 100);
 
@@ -94,12 +93,9 @@ export function renderCube(gl) {
 
   state.modelMatrix = rotXYZ;
 
-  // Contoh penggunaan lookAt
-  const eye = [0, 0, state.zoom];
-  const center = [0, 0, 0];
-  const up = [0, 1, 0];
-
-  state.viewMatrix = lookAt(eye, center, up);
+  // ⬇️ PENTING: Update viewMatrix secara penuh jika ada pan
+  state.viewMatrix[12] = state.pan.x;
+  state.viewMatrix[13] = state.pan.y;
 
   let mv = multiplyMatrices(state.viewMatrix, state.modelMatrix);
   let mvp = multiplyMatrices(state.projectionMatrix, mv);
