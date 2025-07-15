@@ -1,15 +1,24 @@
+// src/core/engine/renderer.js
+
 import { state } from "./state.js";
 import { multiplyMatrices, perspectiveMatrix, lookAt } from "./utils.js";
+
+export let gl = null;
 
 export function initWebGL(canvas) {
   const devicePixelRatio = window.devicePixelRatio || 1;
   canvas.width = canvas.clientWidth * devicePixelRatio;
   canvas.height = canvas.clientHeight * devicePixelRatio;
 
-  const gl = canvas.getContext("webgl", {
+  gl = canvas.getContext("webgl", {
     antialias: true,
     preserveDrawingBuffer: true,
   });
+
+  if (!gl) {
+    console.error("WebGL tidak didukung.");
+    return null;
+  }
 
   gl.viewport(0, 0, canvas.width, canvas.height);
   gl.clearColor(0.1, 0.1, 0.1, 1.0);
@@ -19,6 +28,7 @@ export function initWebGL(canvas) {
 }
 
 export function renderCube(gl) {
+  // Verteks dan indeks seperti sebelumnya...
   const vertices = new Float32Array([
     -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5,
 
@@ -30,7 +40,53 @@ export function renderCube(gl) {
     2, 6, 3, 6, 7, 4, 5, 1, 4, 1, 0,
   ]);
 
-  // Setup shader & buffer seperti sebelumnya...
+  // Setup shader dan buffer...
+
+  const vsSource = `
+    attribute vec3 aPosition;
+    uniform mat4 uMatrix;
+    void main() {
+      gl_Position = uMatrix * vec4(aPosition, 1.0);
+    }
+  `;
+
+  const fsSource = `
+    void main() {
+      gl_FragColor = vec4(1.0, 0.5, 0.0, 1.0); // Oranye
+    }
+  `;
+
+  if (!gl.program) {
+    const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+    gl.shaderSource(vertexShader, vsSource);
+    gl.compileShader(vertexShader);
+
+    const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(fragmentShader, fsSource);
+    gl.compileShader(fragmentShader);
+
+    const program = gl.createProgram();
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+    gl.linkProgram(program);
+    gl.useProgram(program);
+
+    gl.program = program;
+  }
+
+  const program = gl.program;
+
+  const positionAttrib = gl.getAttribLocation(program, "aPosition");
+  gl.enableVertexAttribArray(positionAttrib);
+
+  const vertexBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+  gl.vertexAttribPointer(positionAttrib, 3, gl.FLOAT, false, 0, 0);
+
+  const indexBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
 
   const aspect = gl.canvas.width / gl.canvas.height;
   const projectionMatrix = perspectiveMatrix(45, aspect, 0.1, 100);
@@ -48,10 +104,9 @@ export function renderCube(gl) {
   const up = [0, 1, 0];
 
   const viewMatrix = lookAt(eye, center, up);
-
-  const uMatrix = gl.getUniformLocation(gl.program, "uMatrix");
   const viewProj = multiplyMatrices(projectionMatrix, viewMatrix);
 
+  const uMatrix = gl.getUniformLocation(program, "uMatrix");
   gl.uniformMatrix4fv(uMatrix, false, new Float32Array(viewProj));
 
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);

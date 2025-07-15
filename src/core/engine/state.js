@@ -1,3 +1,5 @@
+// src/core/engine/state.js
+
 import { createIdentityMatrix } from "./utils.js";
 
 export const state = {

@@ -1,3 +1,5 @@
+// src/core/engine/interaction.js
+
 import { state } from "./state.js";
 import { renderCube } from "./renderer.js";
 
@@ -41,7 +43,7 @@ export function setupInteraction(canvas, gl) {
 
       state.theta -= dx * 0.01;
       state.phi += dy * 0.01;
-      state.phi = Math.max(0.1, Math.min(Math.PI - 0.1, state.phi)); // Batas elevasi
+      state.phi = Math.max(0.1, Math.min(Math.PI - 0.1, state.phi));
 
       renderCube(gl);
     }

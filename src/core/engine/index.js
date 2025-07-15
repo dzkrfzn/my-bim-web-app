@@ -1,3 +1,5 @@
+// src/core/engine/index.js
+
 import { initWebGL } from "./renderer.js";
 import { setupInteraction } from "./interaction.js";
 import { renderCube } from "./renderer.js";
@@ -17,10 +19,14 @@ document.addEventListener("DOMContentLoaded", () => {
   renderLoop();
 
   window.addEventListener("resize", () => {
-    const dpr = window.devicePixelRatio;
-    canvas.width = canvas.clientWidth * dpr;
-    canvas.height = canvas.clientHeight * dpr;
-    gl.viewport(0, 0, canvas.width, canvas.height);
-    renderCube(gl);
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
+
+    if (canvas.width !== width || canvas.height !== height) {
+      canvas.width = width;
+      canvas.height = height;
+      gl.viewport(0, 0, canvas.width, canvas.height);
+      renderCube(gl);
+    }
   });
 });
