@@ -1,15 +1,3 @@
-// src/core/engine/utils.js
-
-/**
- * Membuat matriks identitas 4x4
- */
-export function createIdentityMatrix() {
-  return [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
-}
-
-/**
- * Mengalikan dua matriks 4x4
- */
 export function multiplyMatrices(a, b) {
   const result = new Array(16).fill(0);
   for (let row = 0; row < 4; row++) {
@@ -22,9 +10,6 @@ export function multiplyMatrices(a, b) {
   return result;
 }
 
-/**
- * Membuat matriks proyeksi perspektif
- */
 export function perspectiveMatrix(fov, aspect, near, far) {
   const f = 1.0 / Math.tan(fov / 2);
   return [
@@ -47,18 +32,13 @@ export function perspectiveMatrix(fov, aspect, near, far) {
   ];
 }
 
-/**
- * Fungsi lookAt untuk navigasi orbit
- */
 export function lookAt(eye, center, up) {
   const zAxis = normalize([
     eye[0] - center[0],
     eye[1] - center[1],
     eye[2] - center[2],
   ]);
-
   const upNorm = normalize(up);
-
   const xAxis = normalize(cross(upNorm, zAxis));
   const yAxis = cross(zAxis, xAxis);
 

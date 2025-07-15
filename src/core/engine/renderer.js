@@ -1,20 +1,12 @@
-// src/core/engine/renderer.js
-
 import { state } from "./state.js";
 import { multiplyMatrices, perspectiveMatrix, lookAt } from "./utils.js";
-
-export let gl = null;
 
 export function initWebGL(canvas) {
   const devicePixelRatio = window.devicePixelRatio || 1;
   canvas.width = canvas.clientWidth * devicePixelRatio;
   canvas.height = canvas.clientHeight * devicePixelRatio;
 
-  gl = canvas.getContext("webgl", {
-    antialias: true,
-    preserveDrawingBuffer: true,
-  });
-
+  const gl = canvas.getContext("webgl");
   if (!gl) {
     console.error("WebGL tidak didukung.");
     return null;
@@ -28,7 +20,6 @@ export function initWebGL(canvas) {
 }
 
 export function renderCube(gl) {
-  // Verteks dan indeks seperti sebelumnya...
   const vertices = new Float32Array([
     -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5,
 
@@ -56,25 +47,8 @@ export function renderCube(gl) {
     }
   `;
 
-  if (!gl.program) {
-    const vertexShader = gl.createShader(gl.VERTEX_SHADER);
-    gl.shaderSource(vertexShader, vsSource);
-    gl.compileShader(vertexShader);
-
-    const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-    gl.shaderSource(fragmentShader, fsSource);
-    gl.compileShader(fragmentShader);
-
-    const program = gl.createProgram();
-    gl.attachShader(program, vertexShader);
-    gl.attachShader(program, fragmentShader);
-    gl.linkProgram(program);
-    gl.useProgram(program);
-
-    gl.program = program;
-  }
-
-  const program = gl.program;
+  const program = gl.program || createAndLinkProgram(gl, vsSource, fsSource);
+  gl.useProgram(program);
 
   const positionAttrib = gl.getAttribLocation(program, "aPosition");
   gl.enableVertexAttribArray(positionAttrib);
@@ -111,4 +85,22 @@ export function renderCube(gl) {
 
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
+}
+
+function createAndLinkProgram(gl, vsSource, fsSource) {
+  const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+  gl.shaderSource(vertexShader, vsSource);
+  gl.compileShader(vertexShader);
+
+  const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(fragmentShader, fsSource);
+  gl.compileShader(fragmentShader);
+
+  const program = gl.createProgram();
+  gl.attachShader(program, vertexShader);
+  gl.attachShader(program, fragmentShader);
+  gl.linkProgram(program);
+  gl.program = program;
+
+  return program;
 }
