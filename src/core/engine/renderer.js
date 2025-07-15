@@ -1,12 +1,19 @@
 import { state } from "./state.js";
-import { multiplyMatrices, perspectiveMatrix, lookAt } from "./utils.js";
+import {
+  multiplyMatrices,
+  perspectiveMatrix,
+  rotateXMatrix,
+  rotateYMatrix,
+  rotateZMatrix,
+  lookAt, // ✅ Sudah tersedia setelah update utils.js
+} from "./utils.js";
 
 export function initWebGL(canvas) {
   const devicePixelRatio = window.devicePixelRatio || 1;
   canvas.width = canvas.clientWidth * devicePixelRatio;
   canvas.height = canvas.clientHeight * devicePixelRatio;
 
-  const gl = canvas.getContext("webgl");
+  const gl = canvas.getContext("webgl", { antialias: true });
   if (!gl) {
     console.error("WebGL tidak didukung.");
     return null;
@@ -20,6 +27,8 @@ export function initWebGL(canvas) {
 }
 
 export function renderCube(gl) {
+  // Verteks & indeks seperti sebelumnya...
+
   const vertices = new Float32Array([
     -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5,
 
@@ -31,7 +40,13 @@ export function renderCube(gl) {
     2, 6, 3, 6, 7, 4, 5, 1, 4, 1, 0,
   ]);
 
-  // Setup shader dan buffer...
+  const vertexBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+
+  const indexBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
 
   const vsSource = `
     attribute vec3 aPosition;
@@ -43,51 +58,10 @@ export function renderCube(gl) {
 
   const fsSource = `
     void main() {
-      gl_FragColor = vec4(1.0, 0.5, 0.0, 1.0); // Oranye
+      gl_FragColor = vec4(1.0, 0.5, 0.0, 1.0);
     }
   `;
 
-  const program = gl.program || createAndLinkProgram(gl, vsSource, fsSource);
-  gl.useProgram(program);
-
-  const positionAttrib = gl.getAttribLocation(program, "aPosition");
-  gl.enableVertexAttribArray(positionAttrib);
-
-  const vertexBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
-  gl.vertexAttribPointer(positionAttrib, 3, gl.FLOAT, false, 0, 0);
-
-  const indexBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
-
-  const aspect = gl.canvas.width / gl.canvas.height;
-  const projectionMatrix = perspectiveMatrix(45, aspect, 0.1, 100);
-
-  const radius = state.distance;
-  const theta = state.theta;
-  const phi = state.phi;
-
-  const x = radius * Math.sin(phi) * Math.cos(theta);
-  const y = radius * Math.cos(phi);
-  const z = radius * Math.sin(phi) * Math.sin(theta);
-
-  const eye = [x + state.target[0], y + state.target[1], z + state.target[2]];
-  const center = [...state.target];
-  const up = [0, 1, 0];
-
-  const viewMatrix = lookAt(eye, center, up);
-  const viewProj = multiplyMatrices(projectionMatrix, viewMatrix);
-
-  const uMatrix = gl.getUniformLocation(program, "uMatrix");
-  gl.uniformMatrix4fv(uMatrix, false, new Float32Array(viewProj));
-
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
-}
-
-function createAndLinkProgram(gl, vsSource, fsSource) {
   const vertexShader = gl.createShader(gl.VERTEX_SHADER);
   gl.shaderSource(vertexShader, vsSource);
   gl.compileShader(vertexShader);
@@ -100,7 +74,38 @@ function createAndLinkProgram(gl, vsSource, fsSource) {
   gl.attachShader(program, vertexShader);
   gl.attachShader(program, fragmentShader);
   gl.linkProgram(program);
-  gl.program = program;
+  gl.useProgram(program);
 
-  return program;
+  const positionAttrib = gl.getAttribLocation(program, "aPosition");
+  gl.enableVertexAttribArray(positionAttrib);
+  gl.vertexAttribPointer(positionAttrib, 3, gl.FLOAT, false, 0, 0);
+
+  const uMatrix = gl.getUniformLocation(program, "uMatrix");
+
+  const aspect = gl.canvas.width / gl.canvas.height;
+  state.projectionMatrix = perspectiveMatrix(45, aspect, 0.1, 100);
+
+  let rotX = rotateXMatrix(state.rotation.x);
+  let rotY = rotateYMatrix(state.rotation.y);
+  let rotZ = rotateZMatrix(state.rotation.z);
+
+  let rotXY = multiplyMatrices(rotX, rotY);
+  let rotXYZ = multiplyMatrices(rotXY, rotZ);
+
+  state.modelMatrix = rotXYZ;
+
+  // Contoh penggunaan lookAt
+  const eye = [0, 0, state.zoom];
+  const center = [0, 0, 0];
+  const up = [0, 1, 0];
+
+  state.viewMatrix = lookAt(eye, center, up);
+
+  let mv = multiplyMatrices(state.viewMatrix, state.modelMatrix);
+  let mvp = multiplyMatrices(state.projectionMatrix, mv);
+
+  gl.uniformMatrix4fv(uMatrix, false, new Float32Array(mvp));
+
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
 }

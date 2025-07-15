@@ -48,7 +48,7 @@ export function perspectiveMatrix(fov, aspect, near, far) {
 }
 
 /**
- * Rotasi sumbu X
+ * Matriks rotasi sumbu X
  */
 export function rotateXMatrix(angleDeg) {
   const rad = (angleDeg * Math.PI) / 180;
@@ -58,7 +58,7 @@ export function rotateXMatrix(angleDeg) {
 }
 
 /**
- * Rotasi sumbu Y
+ * Matriks rotasi sumbu Y
  */
 export function rotateYMatrix(angleDeg) {
   const rad = (angleDeg * Math.PI) / 180;
@@ -68,11 +68,66 @@ export function rotateYMatrix(angleDeg) {
 }
 
 /**
- * Rotasi sumbu Z
+ * Matriks rotasi sumbu Z
  */
 export function rotateZMatrix(angleDeg) {
   const rad = (angleDeg * Math.PI) / 180;
   const c = Math.cos(rad),
     s = Math.sin(rad);
   return [c, -s, 0, 0, s, c, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+}
+
+/**
+ * Membuat matriks lookAt (kamera)
+ */
+export function lookAt(eye, center, up) {
+  const zAxis = normalizeVector([
+    eye[0] - center[0],
+    eye[1] - center[1],
+    eye[2] - center[2],
+  ]);
+  if (zAxis.every((v) => v === 0)) return createIdentityMatrix();
+
+  const xAxis = normalizeVector(crossProduct(up, zAxis));
+  const yAxis = normalizeVector(crossProduct(zAxis, xAxis));
+
+  const result = [
+    xAxis[0],
+    yAxis[0],
+    zAxis[0],
+    0,
+    xAxis[1],
+    yAxis[1],
+    zAxis[1],
+    0,
+    xAxis[2],
+    yAxis[2],
+    zAxis[2],
+    0,
+    -dotProduct(xAxis, eye),
+    -dotProduct(yAxis, eye),
+    -dotProduct(zAxis, eye),
+    1,
+  ];
+
+  return result;
+}
+
+// --- Fungsi utilitas tambahan ---
+
+function normalizeVector(v) {
+  const length = Math.hypot(...v);
+  return v.map((n) => n / length);
+}
+
+function crossProduct(a, b) {
+  return [
+    a[1] * b[2] - a[2] * b[1],
+    a[2] * b[0] - a[0] * b[2],
+    a[0] * b[1] - a[1] * b[0],
+  ];
+}
+
+function dotProduct(a, b) {
+  return a.reduce((sum, val, i) => sum + val * b[i], 0);
 }
