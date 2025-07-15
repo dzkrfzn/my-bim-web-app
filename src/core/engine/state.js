@@ -1,8 +1,8 @@
 // src/core/engine/state.js
 
 export const state = {
-  // Navigasi 3D
-  target: [0, 0, 0], // Titik fokus (pusat orbit)
+  // Kamera
+  target: [0, 0, 0], // Titik fokus
   distance: 5, // Jarak dari kamera ke target
   theta: 0, // Sudut horizontal
   phi: Math.PI / 2.5, // Sudut vertikal
@@ -10,9 +10,9 @@ export const state = {
   maxDistance: 20,
 
   // UI State
-  isOrbitDragging: false,
-  isPanDragging: false,
-  isAltOrbitDragging: false, // Untuk kombinasi klik tengah + kanan
+  isOrbitDragging: false, // Shift + Middle Click
+  isAltOrbitDragging: false, // Right Click + drag
+  isPanDragging: false, // Middle Click
   lastX: 0,
   lastY: 0,
 };

@@ -17,7 +17,7 @@ export function setupInteraction(canvas, gl) {
 
   // --- Middle Click: Pan ---
   canvas.addEventListener("mousedown", (e) => {
-    if (e.button === 1 && !e.shiftKey && !e.ctrlKey && !e.altKey) {
+    if (e.button === 1 && !e.shiftKey) {
       state.isPanDragging = true;
       state.lastX = e.clientX;
       state.lastY = e.clientY;
@@ -33,16 +33,16 @@ export function setupInteraction(canvas, gl) {
     }
   });
 
-  // --- Alt + Middle Click + Right Click: Orbit Tambahan (mirip AutoCAD) ---
+  // --- Klik Kanan dan tahan: Orbit Alternatif ---
   canvas.addEventListener("mousedown", (e) => {
-    if ((e.button === 1 || e.button === 2) && e.buttons === 5) {
+    if (e.button === 2) {
       state.isAltOrbitDragging = true;
       state.lastX = e.clientX;
       state.lastY = e.clientY;
     }
   });
 
-  // --- Mouse Move ---
+  // --- Mouse Move Handler ---
   canvas.addEventListener("mousemove", (e) => {
     const dx = e.clientX - state.lastX;
     const dy = e.clientY - state.lastY;
@@ -56,15 +56,7 @@ export function setupInteraction(canvas, gl) {
     }
 
     // Orbit (Shift + Middle Click)
-    if (state.isOrbitDragging) {
-      state.theta -= dx * 0.005;
-      state.phi += dy * 0.005;
-      state.phi = Math.max(0.01, Math.min(Math.PI - 0.01, state.phi));
-      renderCube(gl);
-    }
-
-    // Orbit tambahan (Middle + Right Click)
-    if (state.isAltOrbitDragging) {
+    if (state.isOrbitDragging || state.isAltOrbitDragging) {
       state.theta -= dx * 0.005;
       state.phi += dy * 0.005;
       state.phi = Math.max(0.01, Math.min(Math.PI - 0.01, state.phi));
@@ -77,9 +69,13 @@ export function setupInteraction(canvas, gl) {
 
   // --- Mouse Up ---
   canvas.addEventListener("mouseup", (e) => {
-    state.isPanDragging = false;
-    state.isOrbitDragging = false;
-    state.isAltOrbitDragging = false;
+    if (e.button === 1) {
+      state.isPanDragging = false;
+      state.isOrbitDragging = false;
+    }
+    if (e.button === 2) {
+      state.isAltOrbitDragging = false;
+    }
   });
 
   canvas.addEventListener("mouseleave", () => {
