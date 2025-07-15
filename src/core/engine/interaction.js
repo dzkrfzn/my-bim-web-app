@@ -9,20 +9,14 @@ let lastX = 0,
   lastY = 0;
 
 export function setupInteraction(canvas, gl) {
-  // ===== ROTASI =====
   canvas.addEventListener("mousedown", (e) => {
+    // Pan: klik scroll mouse (button 1)
     if (e.button === 1 && !e.shiftKey) {
-      // Scroll click = pan
       isPanDragging = true;
     }
 
-    if (e.button === 2 && e.shiftKey) {
-      // Shift + klik kanan = orbit
-      isOrbitDragging = true;
-    }
-
-    if (e.button === 0 && e.shiftKey) {
-      // Shift + klik kiri = orbit
+    // Orbit: Shift + klik scroll (button 1) atau Shift + klik kanan (button 2)
+    if ((e.button === 1 || e.button === 2 || e.button === 0) && e.shiftKey) {
       isOrbitDragging = true;
     }
 
@@ -30,7 +24,6 @@ export function setupInteraction(canvas, gl) {
     lastY = e.clientY;
   });
 
-  // ===== GERAKAN MOUSE =====
   canvas.addEventListener("mousemove", (e) => {
     const dx = e.clientX - lastX;
     const dy = e.clientY - lastY;
@@ -57,10 +50,9 @@ export function setupInteraction(canvas, gl) {
     lastY = e.clientY;
   });
 
-  // ===== LEPASKAN MOUSE =====
   canvas.addEventListener("mouseup", (e) => {
     if (e.button === 1 && isPanDragging) isPanDragging = false;
-    if ((e.button === 2 || e.button === 0) && isOrbitDragging)
+    if ((e.button === 1 || e.button === 2 || e.button === 0) && isOrbitDragging)
       isOrbitDragging = false;
   });
 
@@ -69,7 +61,6 @@ export function setupInteraction(canvas, gl) {
     isOrbitDragging = false;
   });
 
-  // ===== SCROLL ZOOM =====
   canvas.addEventListener("wheel", (e) => {
     const delta = Math.sign(e.deltaY);
     const zoomSpeed = 0.25;
