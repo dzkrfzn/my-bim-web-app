@@ -1,86 +1,85 @@
 import { state } from "./state.js";
 import { renderCube } from "./renderer.js";
 
+let isRotateDragging = false;
+let isPanDragging = false;
+let isOrbitDragging = false;
+
+let lastX = 0,
+  lastY = 0;
+
 export function setupInteraction(canvas, gl) {
-  canvas.addEventListener("contextmenu", (e) => e.preventDefault());
-
-  // --- Scroll Roda: Zoom ---
-  canvas.addEventListener("wheel", (e) => {
-    const delta = Math.sign(e.deltaY);
-    state.distance -= delta * 0.2;
-    state.distance = Math.max(
-      state.minDistance,
-      Math.min(state.distance, state.maxDistance)
-    );
-    renderCube(gl);
-  });
-
-  // --- Middle Click: Pan ---
+  // ===== ROTASI =====
   canvas.addEventListener("mousedown", (e) => {
     if (e.button === 1 && !e.shiftKey) {
-      state.isPanDragging = true;
-      state.lastX = e.clientX;
-      state.lastY = e.clientY;
+      // Scroll click = pan
+      isPanDragging = true;
     }
+
+    if (e.button === 2 && e.shiftKey) {
+      // Shift + klik kanan = orbit
+      isOrbitDragging = true;
+    }
+
+    if (e.button === 0 && e.shiftKey) {
+      // Shift + klik kiri = orbit
+      isOrbitDragging = true;
+    }
+
+    lastX = e.clientX;
+    lastY = e.clientY;
   });
 
-  // --- Shift + Middle Click: Orbit ---
-  canvas.addEventListener("mousedown", (e) => {
-    if (e.shiftKey && e.button === 1) {
-      state.isOrbitDragging = true;
-      state.lastX = e.clientX;
-      state.lastY = e.clientY;
-    }
-  });
-
-  // --- Klik Kanan dan tahan: Orbit Alternatif ---
-  canvas.addEventListener("mousedown", (e) => {
-    if (e.button === 2) {
-      state.isAltOrbitDragging = true;
-      state.lastX = e.clientX;
-      state.lastY = e.clientY;
-    }
-  });
-
-  // --- Mouse Move Handler ---
+  // ===== GERAKAN MOUSE =====
   canvas.addEventListener("mousemove", (e) => {
-    const dx = e.clientX - state.lastX;
-    const dy = e.clientY - state.lastY;
+    const dx = e.clientX - lastX;
+    const dy = e.clientY - lastY;
+
+    // Orbit
+    if (isOrbitDragging) {
+      state.rotation.y += dx * 0.5;
+      state.rotation.x += dy * 0.5;
+      renderCube(gl);
+    }
 
     // Pan
-    if (state.isPanDragging) {
-      const speed = 0.005 * state.distance;
-      state.target[0] += dx * -speed;
-      state.target[1] += dy * -speed;
+    if (isPanDragging) {
+      state.pan.x += dx * 0.01;
+      state.pan.y -= dy * 0.01;
+
+      state.viewMatrix[12] = state.pan.x;
+      state.viewMatrix[13] = state.pan.y;
+
       renderCube(gl);
     }
 
-    // Orbit (Shift + Middle Click)
-    if (state.isOrbitDragging || state.isAltOrbitDragging) {
-      state.theta -= dx * 0.005;
-      state.phi += dy * 0.005;
-      state.phi = Math.max(0.01, Math.min(Math.PI - 0.01, state.phi));
-      renderCube(gl);
-    }
-
-    state.lastX = e.clientX;
-    state.lastY = e.clientY;
+    lastX = e.clientX;
+    lastY = e.clientY;
   });
 
-  // --- Mouse Up ---
+  // ===== LEPASKAN MOUSE =====
   canvas.addEventListener("mouseup", (e) => {
-    if (e.button === 1) {
-      state.isPanDragging = false;
-      state.isOrbitDragging = false;
-    }
-    if (e.button === 2) {
-      state.isAltOrbitDragging = false;
-    }
+    if (e.button === 1 && isPanDragging) isPanDragging = false;
+    if ((e.button === 2 || e.button === 0) && isOrbitDragging)
+      isOrbitDragging = false;
   });
 
   canvas.addEventListener("mouseleave", () => {
-    state.isPanDragging = false;
-    state.isOrbitDragging = false;
-    state.isAltOrbitDragging = false;
+    isPanDragging = false;
+    isOrbitDragging = false;
+  });
+
+  // ===== SCROLL ZOOM =====
+  canvas.addEventListener("wheel", (e) => {
+    const delta = Math.sign(e.deltaY);
+    const zoomSpeed = 0.25;
+    const minZoom = -8;
+    const maxZoom = -2;
+
+    state.zoom -= delta * zoomSpeed;
+    state.zoom = Math.max(Math.min(state.zoom, maxZoom), minZoom);
+
+    state.viewMatrix[14] = state.zoom;
+    renderCube(gl);
   });
 }

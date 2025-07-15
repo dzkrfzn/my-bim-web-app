@@ -9,18 +9,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
   setupInteraction(canvas, gl);
 
+  // Auto resize
+  window.addEventListener("resize", () => {
+    const devicePixelRatio = window.devicePixelRatio || 1;
+    canvas.width = canvas.clientWidth * devicePixelRatio;
+    canvas.height = canvas.clientHeight * devicePixelRatio;
+
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    renderCube(gl);
+  });
+
+  // Render loop
   function renderLoop() {
     renderCube(gl);
     requestAnimationFrame(renderLoop);
   }
 
   renderLoop();
-
-  window.addEventListener("resize", () => {
-    const dpr = window.devicePixelRatio;
-    canvas.width = canvas.clientWidth * dpr;
-    canvas.height = canvas.clientHeight * dpr;
-    gl.viewport(0, 0, canvas.width, canvas.height);
-    renderCube(gl);
-  });
 });
