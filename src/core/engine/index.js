@@ -9,6 +9,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
   setupInteraction(canvas, gl);
 
+  // 🔁 Update rendering saat layar di-resize
+  window.addEventListener('resize', () => {
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
+
+    if (canvas.width !== width || canvas.height !== height) {
+      canvas.width = width;
+      canvas.height = canvas.clientHeight * window.devicePixelRatio;
+
+      gl.viewport(0, 0, canvas.width, canvas.height);
+      renderCube(gl);
+    }
+  });
+
   function renderLoop() {
     renderCube(gl);
     requestAnimationFrame(renderLoop);

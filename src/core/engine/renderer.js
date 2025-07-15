@@ -13,8 +13,7 @@ export function initWebGL(canvas) {
   canvas.height = canvas.clientHeight * devicePixelRatio;
 
   const gl = canvas.getContext('webgl', {
-    antialias: true,
-    preserveDrawingBuffer: true
+    antialias: true
   });
 
   if (!gl) {
@@ -30,8 +29,8 @@ export function initWebGL(canvas) {
 }
 
 export function renderCube(gl) {
+  // Verteks dan indeks seperti sebelumnya...
   const vertices = new Float32Array([
-    // Verteks seperti sebelumnya...
     -0.5, -0.5,  0.5,
      0.5, -0.5,  0.5,
      0.5,  0.5,  0.5,
@@ -70,7 +69,7 @@ export function renderCube(gl) {
 
   const fsSource = `
     void main() {
-      gl_FragColor = vec4(1.0, 0.5, 0.0, 1.0); // Oranye jernih
+      gl_FragColor = vec4(1.0, 0.5, 0.0, 1.0); // Oranye
     }
   `;
 
