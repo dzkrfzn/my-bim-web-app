@@ -1,6 +1,6 @@
 // src/core/engine/interaction.js
 
-import { mat4 } from "../../lib/gl-matrix-module.js";
+import { mat4 } from "../lib/gl-matrix-module.js";
 
 /**
  * Class untuk menangani interaksi pengguna dengan kamera 3D

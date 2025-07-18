@@ -1,107 +1,144 @@
-import { state } from "./state.js";
-import {
-  multiplyMatrices,
-  perspectiveMatrix,
-  rotateXMatrix,
-  rotateYMatrix,
-  rotateZMatrix,
-} from "./utils.js";
+// src/core/engine/renderer.js
 
-export function initWebGL(canvas) {
-  const devicePixelRatio = window.devicePixelRatio || 1;
-  canvas.width = canvas.clientWidth * devicePixelRatio;
-  canvas.height = canvas.clientHeight * devicePixelRatio;
+import { mat4 } from "../lib/gl-matrix-module.js";
 
-  const gl = canvas.getContext("webgl", { antialias: true });
-  if (!gl) {
-    console.error("WebGL tidak didukung.");
-    return null;
+/**
+ * Class Renderer: Mengelola rendering WebGL menggunakan program shader sederhana.
+ */
+export class Renderer {
+  constructor(gl) {
+    this.gl = gl;
+
+    this.program = this.createProgram();
+    this.positionAttributeLocation = gl.getAttribLocation(
+      this.program,
+      "a_position"
+    );
+    this.matrixUniformLocation = gl.getUniformLocation(
+      this.program,
+      "u_matrix"
+    );
+
+    this.projectionMatrix = mat4.create();
+    this.viewMatrix = mat4.create();
+    this.modelMatrix = mat4.create();
+    this.mvpMatrix = mat4.create();
+
+    this.initMatrices();
   }
 
-  gl.viewport(0, 0, canvas.width, canvas.height);
-  gl.clearColor(0.1, 0.1, 0.1, 1.0);
-  gl.enable(gl.DEPTH_TEST);
+  /**
+   * Membuat program shader (vertex + fragment)
+   */
+  createProgram() {
+    const gl = this.gl;
 
-  return gl;
-}
+    // Vertex Shader
+    const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+    gl.shaderSource(
+      vertexShader,
+      `
+            attribute vec3 a_position;
+            uniform mat4 u_matrix;
+            void main() {
+                gl_Position = u_matrix * vec4(a_position, 1.0);
+            }
+        `
+    );
+    gl.compileShader(vertexShader);
 
-export function renderCube(gl) {
-  // Verteks dan indeks seperti sebelumnya...
-  const vertices = new Float32Array([
-    -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5,
+    // Fragment Shader
+    const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(
+      fragmentShader,
+      `
+            precision mediump float;
+            void main() {
+                gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); // Merah
+            }
+        `
+    );
+    gl.compileShader(fragmentShader);
 
-    -0.5, -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, -0.5,
-  ]);
+    // Gabungkan shader ke dalam program
+    const program = gl.createProgram();
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+    gl.linkProgram(program);
 
-  const indices = new Uint16Array([
-    0, 1, 2, 0, 2, 3, 1, 5, 6, 1, 6, 2, 5, 4, 7, 5, 7, 6, 4, 0, 3, 4, 3, 7, 3,
-    2, 6, 3, 6, 7, 4, 5, 1, 4, 1, 0,
-  ]);
+    return program;
+  }
 
-  const vertexBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+  /**
+   * Inisialisasi matriks perspektif dan view
+   */
+  initMatrices() {
+    const gl = this.gl;
+    const canvas = gl.canvas;
 
-  const indexBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+    // Matriks perspektif
+    mat4.perspective(
+      this.projectionMatrix,
+      Math.PI / 4, // FOV 45 derajat
+      canvas.clientWidth / canvas.clientHeight,
+      0.1, // Near
+      100 // Far
+    );
 
-  const vsSource = `
-    attribute vec3 aPosition;
-    uniform mat4 uMatrix;
-    void main() {
-      gl_Position = uMatrix * vec4(aPosition, 1.0);
-    }
-  `;
+    // Matriks kamera
+    mat4.lookAt(
+      this.viewMatrix,
+      [0, 0, 5], // Eye
+      [0, 0, 0], // Target
+      [0, 1, 0] // Up
+    );
 
-  const fsSource = `
-    void main() {
-      gl_FragColor = vec4(1.0, 0.5, 0.0, 1.0);
-    }
-  `;
+    // Matriks model (identity awal)
+    mat4.identity(this.modelMatrix);
+  }
 
-  const vertexShader = gl.createShader(gl.VERTEX_SHADER);
-  gl.shaderSource(vertexShader, vsSource);
-  gl.compileShader(vertexShader);
+  /**
+   * Update matriks MVP (Model-View-Projection)
+   */
+  updateMVP() {
+    mat4.multiply(this.mvpMatrix, this.viewMatrix, this.modelMatrix);
+    mat4.multiply(this.mvpMatrix, this.projectionMatrix, this.mvpMatrix);
+  }
 
-  const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-  gl.shaderSource(fragmentShader, fsSource);
-  gl.compileShader(fragmentShader);
+  /**
+   * Fungsi utama untuk rendering
+   */
+  render(vertices, indices) {
+    const gl = this.gl;
 
-  const program = gl.createProgram();
-  gl.attachShader(program, vertexShader);
-  gl.attachShader(program, fragmentShader);
-  gl.linkProgram(program);
-  gl.useProgram(program);
+    // Aktifkan program shader
+    gl.useProgram(this.program);
 
-  const positionAttrib = gl.getAttribLocation(program, "aPosition");
-  gl.enableVertexAttribArray(positionAttrib);
-  gl.vertexAttribPointer(positionAttrib, 3, gl.FLOAT, false, 0, 0);
+    // Buat dan bind buffer vertex
+    const vertexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
-  const uMatrix = gl.getUniformLocation(program, "uMatrix");
+    // Aktifkan atribut posisi
+    gl.enableVertexAttribArray(this.positionAttributeLocation);
+    gl.vertexAttribPointer(
+      this.positionAttributeLocation,
+      3,
+      gl.FLOAT,
+      false,
+      0,
+      0
+    );
 
-  // ⬇️ PENTING: Rekomputasi semua matriks setiap kali renderCube dipanggil
-  const aspect = gl.canvas.width / gl.canvas.height;
-  state.projectionMatrix = perspectiveMatrix(45, aspect, 0.1, 100);
+    // Buat dan bind buffer index
+    const indexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
 
-  let rotX = rotateXMatrix(state.rotation.x);
-  let rotY = rotateYMatrix(state.rotation.y);
-  let rotZ = rotateZMatrix(state.rotation.z);
+    // Kirim matriks ke shader
+    gl.uniformMatrix4fv(this.matrixUniformLocation, false, this.mvpMatrix);
 
-  let rotXY = multiplyMatrices(rotX, rotY);
-  let rotXYZ = multiplyMatrices(rotXY, rotZ);
-
-  state.modelMatrix = rotXYZ;
-
-  // ⬇️ PENTING: Update viewMatrix secara penuh jika ada pan
-  state.viewMatrix[12] = state.pan.x;
-  state.viewMatrix[13] = state.pan.y;
-
-  let mv = multiplyMatrices(state.viewMatrix, state.modelMatrix);
-  let mvp = multiplyMatrices(state.projectionMatrix, mv);
-
-  gl.uniformMatrix4fv(uMatrix, false, new Float32Array(mvp));
-
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
+    // Gambar model
+    gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
+  }
 }
