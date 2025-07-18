@@ -1,88 +1,82 @@
-import { state } from "./state.js";
-import { renderCube } from "./renderer.js";
+// src/core/engine/interaction.js
 
-let isOrbitDragging = false;
-let isPanDragging = false;
+import { mat4 } from "../../lib/gl-matrix-module.js";
 
-let lastX = 0,
-  lastY = 0;
-let needsRender = false;
+/**
+ * Class untuk menangani interaksi pengguna dengan kamera 3D
+ */
+export class Interaction {
+  constructor(canvas, renderer) {
+    this.canvas = canvas;
+    this.renderer = renderer;
 
-export function setupInteraction(canvas, gl) {
-  canvas.addEventListener("contextmenu", (e) => e.preventDefault());
+    this.isDragging = false;
+    this.lastX = 0;
+    this.lastY = 0;
 
-  // ===== MOUSE DOWN =====
-  canvas.addEventListener("mousedown", (e) => {
-    if (e.button === 1 && !e.shiftKey) {
-      isPanDragging = true;
-      e.preventDefault();
-    }
+    this.pitch = 0;
+    this.yaw = 0;
+    this.distance = 5;
 
-    if ((e.shiftKey && e.button === 2) || (e.shiftKey && e.button === 1)) {
-      isOrbitDragging = true;
-      e.preventDefault();
-    }
-
-    lastX = e.clientX;
-    lastY = e.clientY;
-  });
-
-  // ===== MOUSE MOVE =====
-  canvas.addEventListener("mousemove", (e) => {
-    const dx = e.clientX - lastX;
-    const dy = e.clientY - lastY;
-
-    if (isOrbitDragging) {
-      state.rotation.y -= dx * 0.5;
-      state.rotation.x -= dy * 0.5;
-      needsRender = true;
-    }
-
-    if (isPanDragging) {
-      state.pan.x += dx * 0.01;
-      state.pan.y -= dy * 0.01;
-      needsRender = true;
-    }
-
-    lastX = e.clientX;
-    lastY = e.clientY;
-  });
-
-  // ===== SCROLL ZOOM =====
-  canvas.addEventListener("wheel", (e) => {
-    const delta = Math.sign(e.deltaY);
-    const zoomSpeed = 0.25;
-    const minZoom = -8;
-    const maxZoom = -2;
-
-    state.zoom -= delta * zoomSpeed;
-    state.zoom = Math.max(Math.min(state.zoom, maxZoom), minZoom);
-
-    state.viewMatrix[14] = state.zoom;
-
-    // ⬇️ Penting: Paksakan renderCube(gl) saat zoom
-    renderCube(gl); // <== ✅ Panggil langsung agar zoom langsung terlihat
-  });
-
-  // ===== RENDER LOOP =====
-  function renderLoop() {
-    if (needsRender) {
-      renderCube(gl);
-      needsRender = false;
-    }
-    requestAnimationFrame(renderLoop);
+    this.init();
   }
 
-  renderLoop();
+  init() {
+    this.canvas.addEventListener("mousedown", this.onMouseDown.bind(this));
+    this.canvas.addEventListener("mouseup", this.onMouseUp.bind(this));
+    this.canvas.addEventListener("mousemove", this.onMouseMove.bind(this));
+    this.canvas.addEventListener("wheel", this.onWheel.bind(this));
+  }
 
-  // ===== MOUSE UP & LEAVE =====
-  canvas.addEventListener("mouseup", () => {
-    isOrbitDragging = false;
-    isPanDragging = false;
-  });
+  onMouseDown(e) {
+    // Shift + klik atau klik tengah untuk mulai dragging
+    if (e.shiftKey || e.button === 1) {
+      this.isDragging = true;
+      this.lastX = e.clientX;
+      this.lastY = e.clientY;
+    }
+  }
 
-  canvas.addEventListener("mouseleave", () => {
-    isOrbitDragging = false;
-    isPanDragging = false;
-  });
+  onMouseUp(e) {
+    this.isDragging = false;
+  }
+
+  onMouseMove(e) {
+    if (this.isDragging) {
+      const dx = e.clientX - this.lastX;
+      const dy = e.clientY - this.lastY;
+
+      this.yaw += dx * 0.01;
+      this.pitch += dy * 0.01;
+
+      // Batasi pitch agar kamera tidak terbalik
+      this.pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.pitch));
+
+      this.lastX = e.clientX;
+      this.lastY = e.clientY;
+
+      this.updateCamera();
+    }
+  }
+
+  onWheel(e) {
+    // Zoom menggunakan scroll
+    this.distance *= e.deltaY < 0 ? 0.9 : 1.1;
+    this.updateCamera();
+  }
+
+  updateCamera() {
+    const { pitch, yaw, distance } = this;
+
+    // Hitung posisi kamera berdasarkan yaw dan pitch
+    const eye = [
+      distance * Math.cos(pitch) * Math.sin(yaw),
+      distance * Math.sin(pitch),
+      distance * Math.cos(pitch) * Math.cos(yaw),
+    ];
+
+    // Update view matrix
+    mat4.lookAt(this.renderer.viewMatrix, eye, [0, 0, 0], [0, 1, 0]);
+    this.renderer.updateMVP();
+  }
 }
