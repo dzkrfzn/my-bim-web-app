@@ -1,29 +1,32 @@
-import { initWebGL } from "./renderer.js";
-import { setupInteraction } from "./interaction.js";
-import { renderCube } from "./renderer.js";
+// src/core/engine/index.js
 
-document.addEventListener("DOMContentLoaded", () => {
-  const canvas = document.getElementById("webgl-canvas");
-  const gl = initWebGL(canvas);
-  if (!gl) return;
+import { IFCParser } from "../../data/ifc/ifc-parser.js";
+import { IFCGeometry } from "../../data/ifc/ifc-geometry.js";
+import { IFCEntity } from "../../data/ifc/ifc-entity.js";
+import { Renderer } from "./renderer.js";
+import { Interaction } from "./interaction.js";
 
-  setupInteraction(canvas, gl);
-
-  // Auto resize
-  window.addEventListener("resize", () => {
-    const devicePixelRatio = window.devicePixelRatio || 1;
-    canvas.width = canvas.clientWidth * devicePixelRatio;
-    canvas.height = canvas.clientHeight * devicePixelRatio;
-
-    gl.viewport(0, 0, canvas.width, canvas.height);
-    renderCube(gl);
-  });
-
-  // Render loop
-  function renderLoop() {
-    renderCube(gl);
-    requestAnimationFrame(renderLoop);
+export class Engine {
+  constructor(canvas) {
+    this.canvas = canvas;
+    this.gl = canvas.getContext("webgl");
+    this.renderer = new Renderer(this.gl);
+    this.interaction = new Interaction(canvas, this.renderer);
   }
 
-  renderLoop();
-});
+  async loadIFC(file) {
+    const text = await file.text();
+    const parser = new IFCParser();
+    parser.parse(text);
+
+    const geometry = new IFCGeometry(parser);
+    const { vertices, indices } = geometry.extractGeometry();
+
+    const entities = new IFCEntity(parser);
+    const elements = entities.extractElements();
+
+    console.log("Elements:", elements);
+
+    this.renderer.render(vertices, indices);
+  }
+}
