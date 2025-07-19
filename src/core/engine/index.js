@@ -29,6 +29,12 @@ export class Engine {
       return;
     }
 
+    const entity = new IFCEntity(parser);
+    const elements = entity.extractElements();
+
+    console.log("Parsing selesai. Menampilkan metadata elemen:");
+    console.table(elements.slice(0, 10));
+
     this.interaction.fitToView(geometry.vertices);
     this.renderer.render(geometry.vertices, geometry.indices);
   }
