@@ -92,6 +92,11 @@ export class Renderer {
   }
 
   render(vertices, indices) {
+    if (!vertices || !indices) {
+      console.warn("Renderer: Tidak ada data geometri untuk dirender.");
+      return;
+    }
+
     const gl = this.gl;
 
     gl.useProgram(this.program);

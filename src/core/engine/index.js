@@ -24,25 +24,12 @@ export class Engine {
     await parser.parse(text);
 
     const geometry = parser.extractGeometry(text);
-    if (!geometry) {
+    if (!geometry || !geometry.vertices || !geometry.indices) {
       console.warn("Tidak ada geometri yang dapat dirender.");
       return;
     }
 
-    const { vertices, indices } = geometry;
-
-    if (vertices.length === 0 || indices.length === 0) {
-      console.warn("IFC4: Tidak ada geometri yang dapat dirender.");
-      return;
-    }
-
-    const entity = new IFCEntity(parser);
-    const elements = entity.extractElements();
-
-    console.log("Parsing selesai. Menampilkan metadata elemen:");
-    console.table(elements.slice(0, 10));
-
-    this.interaction.fitToView(vertices);
-    this.renderer.render(vertices, indices);
+    this.interaction.fitToView(geometry.vertices);
+    this.renderer.render(geometry.vertices, geometry.indices);
   }
 }

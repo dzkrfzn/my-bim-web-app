@@ -92,7 +92,6 @@ export class Interaction {
 
     const size = Math.max(maxX - minX, maxY - minY, maxZ - minZ);
     this.distance = size * 2;
-
     this.yaw = 0;
     this.pitch = 0;
 

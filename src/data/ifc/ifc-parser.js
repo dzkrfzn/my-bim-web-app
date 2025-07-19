@@ -2,6 +2,7 @@
 
 import { IFCVersionResolver } from "./ifc-identifier.js";
 
+// ✅ Definisi class IFCParser
 export class IFCParser {
   constructor() {
     this.entities = new Map();
@@ -16,9 +17,9 @@ export class IFCParser {
     return this.entities;
   }
 
-  async extractGeometry(data) {
+  extractGeometry(data) {
     const version = IFCVersionResolver.detectIFCVersion(data);
     const geometry = IFCVersionResolver.getGeometry(version, this);
-    return geometry.extractGeometry(data); // ✅ Kirim data ke geometry
+    return geometry.extractGeometry(data);
   }
 }
