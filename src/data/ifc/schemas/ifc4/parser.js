@@ -29,6 +29,6 @@ export class IFC4Parser {
     if (!content) return [];
     const match = content.match(/^\w+$(.*?)$/);
     if (!match) return [];
-    return match[1].split(",").map((arg) => arg.trim().replace(/^'|'$/g, ""));
+    return match[1].split(",").map((arg) => arg.replace(/^'|'$/g, "").trim());
   }
 }

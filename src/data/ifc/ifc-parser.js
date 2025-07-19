@@ -16,8 +16,8 @@ export class IFCParser {
     return this.entities;
   }
 
-  extractGeometry() {
-    const version = IFCVersionResolver.detectIFCVersion(""); // harus diambil dari data sebenarnya
+  extractGeometry(data) {
+    const version = IFCVersionResolver.detectIFCVersion(data);
     const geometry = IFCVersionResolver.getGeometry(version, this);
     return geometry.extractGeometry();
   }
