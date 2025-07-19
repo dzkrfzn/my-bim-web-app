@@ -6,13 +6,30 @@ import { IFC4Geometry } from "./schemas/ifc4/geometry.js";
 export class IFCVersionResolver {
   static detectIFCVersion(ifcData) {
     const headerSection = ifcData.split("ENDSEC;")[0];
+
+    // Coba deteksi dari FILE_SCHEMA
     const schemaMatch = headerSection.match(
       /FILE_SCHEMA\s*$\s*(IFC[0-9A-Za-z.]*)\s*$/
     );
     if (schemaMatch && schemaMatch[1]) {
       return schemaMatch[1].toUpperCase();
     }
-    return "UNKNOWN";
+
+    // Jika tidak ketemu, coba dari FILE_NAME atau FILE_DESCRIPTION
+    const nameMatch = headerSection.match(/FILE_NAME\$[^']*'([^']+)'/);
+    const descMatch = headerSection.match(/FILE_DESCRIPTION\$[^']*'([^']+)'/);
+
+    if (nameMatch && nameMatch[1] && nameMatch[1].includes("IFC4")) {
+      return "IFC4";
+    }
+    if (descMatch && descMatch[1] && descMatch[1].includes("IFC4")) {
+      return "IFC4";
+    }
+
+    console.warn(
+      "Versi IFC tidak terdeteksi. Menggunakan IFC4 sebagai default."
+    );
+    return "IFC4";
   }
 
   static getParser(version) {

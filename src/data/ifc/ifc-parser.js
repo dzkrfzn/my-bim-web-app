@@ -16,7 +16,7 @@ export class IFCParser {
     return this.entities;
   }
 
-  extractGeometry(data) {
+  async extractGeometry(data) {
     const version = IFCVersionResolver.detectIFCVersion(data);
     const geometry = IFCVersionResolver.getGeometry(version, this);
     return geometry.extractGeometry();

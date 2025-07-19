@@ -15,6 +15,7 @@ export class IFC4Geometry {
     this._parseExtrudedAreaSolid();
     this._parseShapeRepresentation();
     this._parseMappedItem();
+    this._parseLocalPlacement();
 
     const hasGeometry = this.vertices.length > 0 && this.indices.length > 0;
     if (!hasGeometry) {
@@ -102,6 +103,79 @@ export class IFC4Geometry {
         if (map?.type === "IFCREPRESENTATIONMAP") {
           const placement = this.parser.entities.get(placementId);
           console.log("IFC4: Menemukan pemetaan:", mapId);
+        }
+      }
+    }
+  }
+
+  _parseMappedItem() {
+    for (const [id, entity] of this.parser.entities) {
+      if (entity.type.startsWith("IFCMAPPEDITEM")) {
+        const mapId = entity.args[0]?.replace(/^#/, "");
+        const placementId = entity.args[1]?.replace(/^#/, "");
+
+        const map = this.parser.entities.get(mapId);
+        if (map?.type === "IFCREPRESENTATIONMAP") {
+          const placement = this.parser.entities.get(placementId);
+          const shapeRepId = map.args[1]?.replace(/^#/, "");
+          const shapeRep = this.parser.entities.get(shapeRepId);
+          if (shapeRep && shapeRep.type === "IFCSHAPEREPRESENTATION") {
+            const items = shapeRep.args[3]?.replace(/^$#/, "").split(",#");
+            if (items) {
+              items.forEach((itemId) => {
+                const item = this.parser.entities.get(itemId);
+                if (item && item.type === "IFCEXTRUDEDAREASOLID") {
+                  this._parseExtrudedAreaSolidFromMappedItem(item, placement);
+                }
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+
+  _parseExtrudedAreaSolidFromMappedItem(entity, placement) {
+    const profileId = entity.args[0]?.replace(/^#/, "");
+    const directionId = entity.args[2]?.replace(/^#/, "");
+    const length = parseFloat(entity.args[3]);
+
+    if (profileId && this.faceSetMap.has(profileId)) {
+      const indices = this.faceSetMap.get(profileId);
+      this.indices.push(...indices);
+    }
+  }
+
+  _parsePolygonalFaceSet() {
+    for (const [id, entity] of this.parser.entities) {
+      if (entity.type === "IFCINDEXEDPOLYGONALFACESET") {
+        const coords = entity.args[2]?.replace(/^$#/, "").split(",#");
+        if (coords) {
+          const indices = [];
+          for (let i = 0; i < coords.length; i++) {
+            const pid = coords[i];
+            const idx = this.pointMap.get(pid);
+            if (idx !== undefined) {
+              indices.push(idx);
+            }
+          }
+          this.faceSetMap.set(id, indices);
+        }
+      }
+    }
+    console.log("IFC4: Jumlah face set:", this.faceSetMap.size);
+  }
+
+  _parseLocalPlacement() {
+    for (const [id, entity] of this.parser.entities) {
+      if (entity.type === "IFCLOCALPLACEMENT") {
+        const relativeToId = entity.args[0]?.replace(/^#/, "");
+        const placementId = entity.args[1]?.replace(/^#/, "");
+
+        const placement = this.parser.entities.get(placementId);
+        if (placement && placement.type === "IFCAXIS2PLACEMENT3D") {
+          console.log("Menemukan IFCLOCALPLACEMENT:", id);
+          // Di sini tambahkan logika transformasi matriks
         }
       }
     }

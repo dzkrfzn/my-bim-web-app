@@ -23,7 +23,7 @@ export class Engine {
     const parser = new IFCParser();
     await parser.parse(text);
 
-    const geometry = parser.extractGeometry(text);
+    const geometry = parser.extractGeometry(text); // ✅ Kirim text ke parser
     const entity = new IFCEntity(parser);
     const elements = entity.extractElements();
 
