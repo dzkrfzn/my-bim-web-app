@@ -19,6 +19,6 @@ export class IFCParser {
   async extractGeometry(data) {
     const version = IFCVersionResolver.detectIFCVersion(data);
     const geometry = IFCVersionResolver.getGeometry(version, this);
-    return geometry.extractGeometry();
+    return geometry.extractGeometry(data); // ✅ Kirim data ke geometry
   }
 }

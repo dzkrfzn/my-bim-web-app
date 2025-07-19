@@ -7,7 +7,6 @@ export class IFCVersionResolver {
   static detectIFCVersion(ifcData) {
     const headerSection = ifcData.split("ENDSEC;")[0];
 
-    // Coba deteksi dari FILE_SCHEMA
     const schemaMatch = headerSection.match(
       /FILE_SCHEMA\s*$\s*(IFC[0-9A-Za-z.]*)\s*$/
     );
@@ -15,14 +14,14 @@ export class IFCVersionResolver {
       return schemaMatch[1].toUpperCase();
     }
 
-    // Jika tidak ketemu, coba dari FILE_NAME atau FILE_DESCRIPTION
-    const nameMatch = headerSection.match(/FILE_NAME\$[^']*'([^']+)'/);
+    // Fallback: deteksi dari FILE_DESCRIPTION atau FILE_NAME
     const descMatch = headerSection.match(/FILE_DESCRIPTION\$[^']*'([^']+)'/);
+    const nameMatch = headerSection.match(/FILE_NAME\$[^']*'([^']+)'/);
 
-    if (nameMatch && nameMatch[1] && nameMatch[1].includes("IFC4")) {
+    if (descMatch && descMatch[1] && descMatch[1].includes("IFC4")) {
       return "IFC4";
     }
-    if (descMatch && descMatch[1] && descMatch[1].includes("IFC4")) {
+    if (nameMatch && nameMatch[1] && nameMatch[1].includes("IFC4")) {
       return "IFC4";
     }
 
