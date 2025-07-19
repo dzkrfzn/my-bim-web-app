@@ -2,7 +2,6 @@
 
 import { IFCVersionResolver } from "./ifc-identifier.js";
 
-// ✅ Definisi class IFCParser
 export class IFCParser {
   constructor() {
     this.entities = new Map();

@@ -17,7 +17,7 @@ export class IFC4Parser {
       const id = idMatch[1];
       const content = line.slice(idMatch[0].length + 1, -1).trim();
       const [type, ...rest] = content.split("=");
-      const args = this.parseArgs(rest.join("=").trim());
+      const args = this._parseArgs(rest.join("=").trim());
 
       this.entities.set(id, { type: type.trim(), args });
     }
@@ -25,10 +25,10 @@ export class IFC4Parser {
     return this.entities;
   }
 
-  parseArgs(content) {
+  _parseArgs(content) {
     if (!content) return [];
     const match = content.match(/^\w+$(.*?)$/);
     if (!match) return [];
-    return match[1].split(",").map((arg) => arg.replace(/^'|'$/g, "").trim());
+    return match[1].split(",").map((arg) => arg.trim().replace(/^'|'$/g, ""));
   }
 }

@@ -14,14 +14,13 @@ export class IFCVersionResolver {
       return schemaMatch[1].toUpperCase();
     }
 
-    // Fallback: deteksi dari FILE_DESCRIPTION atau FILE_NAME
     const descMatch = headerSection.match(/FILE_DESCRIPTION\$[^']*'([^']+)'/);
     const nameMatch = headerSection.match(/FILE_NAME\$[^']*'([^']+)'/);
 
-    if (descMatch && descMatch[1] && descMatch[1].includes("IFC4")) {
+    if (descMatch && descMatch[1].includes("IFC4")) {
       return "IFC4";
     }
-    if (nameMatch && nameMatch[1] && nameMatch[1].includes("IFC4")) {
+    if (nameMatch && nameMatch[1].includes("IFC4")) {
       return "IFC4";
     }
 

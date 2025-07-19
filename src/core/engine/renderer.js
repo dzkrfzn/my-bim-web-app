@@ -5,7 +5,7 @@ import { mat4 } from "../lib/gl-matrix-module.js";
 export class Renderer {
   constructor(gl) {
     this.gl = gl;
-    this.program = this.createProgram();
+    this.program = this._createProgram();
     this.positionAttributeLocation = gl.getAttribLocation(
       this.program,
       "a_position"
@@ -20,10 +20,10 @@ export class Renderer {
     this.modelMatrix = mat4.create();
     this.mvpMatrix = mat4.create();
 
-    this.initMatrices();
+    this._initMatrices();
   }
 
-  createProgram() {
+  _createProgram() {
     const gl = this.gl;
 
     const vertexShader = gl.createShader(gl.VERTEX_SHADER);
@@ -71,7 +71,7 @@ export class Renderer {
     return program;
   }
 
-  initMatrices() {
+  _initMatrices() {
     const gl = this.gl;
     const canvas = gl.canvas;
 
@@ -119,6 +119,7 @@ export class Renderer {
       0
     );
 
+    this.updateMVP();
     gl.uniformMatrix4fv(this.matrixUniformLocation, false, this.mvpMatrix);
 
     gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);

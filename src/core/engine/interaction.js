@@ -59,10 +59,11 @@ export class Interaction {
   }
 
   updateCamera() {
+    const { pitch, yaw, distance } = this;
     const eye = [
-      this.distance * Math.cos(this.pitch) * Math.sin(this.yaw),
-      this.distance * Math.sin(this.pitch),
-      this.distance * Math.cos(this.pitch) * Math.cos(this.yaw),
+      distance * Math.cos(pitch) * Math.sin(yaw),
+      distance * Math.sin(pitch),
+      distance * Math.cos(pitch) * Math.cos(yaw),
     ];
 
     mat4.lookAt(this.renderer.viewMatrix, eye, [0, 0, 0], [0, 1, 0]);
@@ -92,6 +93,7 @@ export class Interaction {
 
     const size = Math.max(maxX - minX, maxY - minY, maxZ - minZ);
     this.distance = size * 2;
+
     this.yaw = 0;
     this.pitch = 0;
 
