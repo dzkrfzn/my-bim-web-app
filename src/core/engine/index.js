@@ -23,19 +23,39 @@ export class Engine {
     const parser = new IFCParser();
     await parser.parse(text);
 
+    const entity = new IFCEntity(parser);
+    const elements = entity.extractElements();
+
     const geometry = parser.extractGeometry(text);
     if (!geometry || !geometry.vertices || !geometry.indices) {
       console.warn("Tidak ada geometri yang dapat dirender.");
       return;
     }
 
-    const entity = new IFCEntity(parser);
-    const elements = entity.extractElements();
-
-    console.log("Parsing selesai. Menampilkan metadata elemen:");
-    console.table(elements.slice(0, 10));
+    console.log("Parsing selesai. Menampilkan elemen BIM:");
+    console.table(
+      elements.filter((el) => el.type.startsWith("IFC")).slice(0, 20)
+    );
 
     this.interaction.fitToView(geometry.vertices);
     this.renderer.render(geometry.vertices, geometry.indices);
+  }
+
+  _renderMetadata(elements) {
+    const container = document.getElementById("metadata");
+    container.innerHTML = "<h3>Metadata BIM</h3><ul>";
+
+    elements.forEach((el) => {
+      container.innerHTML += `
+            <li>
+                <strong>${el.type}</strong><br>
+                ID: ${el.id}<br>
+                Nama: ${el.attributes.name || "Unnamed"}<br>
+                Deskripsi: ${el.attributes.description || ""}
+                <hr>
+            </li>`;
+    });
+
+    container.innerHTML += "</ul>";
   }
 }

@@ -9,13 +9,12 @@ export class IFC4Geometry {
     this.faceSetMap = new Map(); // { id: indices }
     this.extrusionMap = new Map(); // { id: indices }
     this.mappedItemMap = new Map(); // { id: indices }
-    this.placementMap = new Map(); // { id: matrix }
+    this.placementMap = new Map(); // { id: placement }
   }
 
   extractGeometry(data) {
     this._parsePoints();
-    this._parseTriangulatedFaceSet();
-    this._parseIndexedPolygonalFaceSet();
+    this._parsePolygonalFaceSet();
     this._parseExtrudedAreaSolid();
     this._parseMappedItem();
     this._parseLocalPlacement();
@@ -37,13 +36,7 @@ export class IFC4Geometry {
     for (const [id, entity] of this.parser.entities) {
       if (entity.type === "IFCCARTESIANPOINT") {
         const coordsStr = entity.args[0]?.replace(/^\(|$\s*$/g, "");
-        if (!coordsStr) {
-          console.warn(
-            "IFCCARTESIANPOINT: Format koordinat tidak valid untuk ID:",
-            id
-          );
-          continue;
-        }
+        if (!coordsStr) continue;
 
         const coords = coordsStr.split(",").map(Number);
         const index = this.vertices.length / 3;
@@ -55,38 +48,7 @@ export class IFC4Geometry {
     console.log("IFC4: Jumlah titik:", this.pointMap.size);
   }
 
-  _parseTriangulatedFaceSet() {
-    for (const [id, entity] of this.parser.entities) {
-      if (entity.type === "IFCTRIANGULATEDFACESET") {
-        const coordsStr = entity.args[0]?.replace(/^\(|$\s*$/g, "");
-        const pointsStr = entity.args[1]?.replace(/^\(|$\s*$/g, "");
-
-        if (!coordsStr || !pointsStr) continue;
-
-        const coords = coordsStr.split(",").map(Number);
-        const points = pointsStr
-          .split(",")
-          .map((coord) => coord.replace(/^#/, ""));
-
-        const indices = [];
-        for (let i = 0; i < points.length; i++) {
-          const pid = points[i];
-          const idx = this.pointMap.get(pid);
-          if (idx !== undefined) {
-            indices.push(idx);
-          }
-        }
-
-        if (indices.length > 0) {
-          this.faceSetMap.set(id, indices);
-          this.indices.push(...indices);
-        }
-      }
-    }
-    console.log("IFC4: Jumlah triangulated face set:", this.faceSetMap.size);
-  }
-
-  _parseIndexedPolygonalFaceSet() {
+  _parsePolygonalFaceSet() {
     for (const [id, entity] of this.parser.entities) {
       if (entity.type === "IFCINDEXEDPOLYGONALFACESET") {
         const coordsStr = entity.args[2]?.replace(/^\(|$\s*$/g, "");
@@ -165,32 +127,11 @@ export class IFC4Geometry {
       if (entity.type === "IFCLOCALPLACEMENT") {
         const placementId = entity.args[1]?.replace(/^#/, "");
         const placement = this.parser.entities.get(placementId);
-
         if (placement && placement.type === "IFCAXIS2PLACEMENT3D") {
-          const locationId = placement.args[0]?.replace(/^#/, "");
-          const zAxisId = placement.args[1]?.replace(/^#/, "");
-          const xAxisId = placement.args[2]?.replace(/^#/, "");
-
-          const location = this.pointMap.get(locationId);
-          const zAxis = this.pointMap.get(zAxisId);
-          const xAxis = this.pointMap.get(xAxisId);
-
-          if (location !== undefined) {
-            const offset = [
-              this.vertices[location * 3],
-              this.vertices[location * 3 + 1],
-              this.vertices[location * 3 + 2],
-            ];
-            this._applyPlacement(offset);
-          }
+          console.log("Menemukan IFCLOCALPLACEMENT:", id);
+          // Di sini tambahkan logika transformasi jika diperlukan
         }
       }
     }
-  }
-
-  _applyPlacement(offset) {
-    // Tambahkan logika transformasi berdasarkan offset
-    console.log("IFC4: Menerapkan transformasi ke", offset);
-    // Di sini bisa tambahkan logika matriks menggunakan gl-matrix
   }
 }
