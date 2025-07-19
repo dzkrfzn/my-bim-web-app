@@ -7,14 +7,14 @@ export class IFC4Geometry {
     this.indices = [];
     this.pointMap = new Map(); // { id: index }
     this.faceSetMap = new Map(); // { id: indices }
-    this.extrusionMap = new Map(); // { id: indices }
-    this.mappedItemMap = new Map(); // { id: indices }
-    this.placementMap = new Map(); // { id: placement }
+    this.mappedItems = new Map(); // { id: mapped item id }
+    this.localPlacements = new Map(); // { id: placement data }
   }
 
   extractGeometry(data) {
     this._parsePoints();
     this._parsePolygonalFaceSet();
+    this._parseTriangulatedFaceSet();
     this._parseExtrudedAreaSolid();
     this._parseMappedItem();
     this._parseLocalPlacement();
@@ -23,6 +23,8 @@ export class IFC4Geometry {
     if (!hasGeometry) {
       console.warn("IFC4: Tidak ada geometri yang dapat dirender.");
     } else {
+      console.log(`IFC4: Jumlah titik: ${this.pointMap.size}`);
+      console.log(`IFC4: Jumlah face set: ${this.faceSetMap.size}`);
       console.log("IFC4: Geometri berhasil diekstraksi.");
     }
 
@@ -35,17 +37,20 @@ export class IFC4Geometry {
   _parsePoints() {
     for (const [id, entity] of this.parser.entities) {
       if (entity.type === "IFCCARTESIANPOINT") {
-        const coordsStr = entity.args[0]?.replace(/^\(|$\s*$/g, "");
+        // Hilangkan tanda (( )) atau ( ) untuk parsing
+        const coordsStr = entity.args[0]?.replace(/^\(|$\s*$/g, "").trim();
         if (!coordsStr) continue;
 
-        const coords = coordsStr.split(",").map(Number);
-        const index = this.vertices.length / 3;
+        const coords = coordsStr.split(",").map((coord) => {
+          // Bersihkan dari tanda kurung dan format E-15
+          return parseFloat(coord.replace(/[()]/g, "").trim());
+        });
 
+        const index = this.vertices.length / 3;
         this.vertices.push(...coords);
         this.pointMap.set(id, index);
       }
     }
-    console.log("IFC4: Jumlah titik:", this.pointMap.size);
   }
 
   _parsePolygonalFaceSet() {
@@ -56,7 +61,7 @@ export class IFC4Geometry {
 
         const coords = coordsStr
           .split(",")
-          .map((coord) => coord.replace(/^#/, ""));
+          .map((coord) => coord.replace(/^#/, "").trim());
         const indices = [];
 
         for (let i = 0; i < coords.length; i++) {
@@ -73,7 +78,33 @@ export class IFC4Geometry {
         }
       }
     }
-    console.log("IFC4: Jumlah face set:", this.faceSetMap.size);
+  }
+
+  _parseTriangulatedFaceSet() {
+    for (const [id, entity] of this.parser.entities) {
+      if (entity.type === "IFCTRIANGULATEDFACESET") {
+        const coordsStr = entity.args[0]?.replace(/^\(|$\s*$/g, "");
+        if (!coordsStr) continue;
+
+        const coords = coordsStr
+          .split(",")
+          .map((coord) => coord.replace(/^#/, "").trim());
+        const indices = [];
+
+        for (let i = 0; i < coords.length; i++) {
+          const pid = coords[i];
+          const idx = this.pointMap.get(pid);
+          if (idx !== undefined) {
+            indices.push(idx);
+          }
+        }
+
+        if (indices.length > 0) {
+          this.faceSetMap.set(id, indices);
+          this.indices.push(...indices);
+        }
+      }
+    }
   }
 
   _parseExtrudedAreaSolid() {
@@ -98,6 +129,7 @@ export class IFC4Geometry {
         if (map?.type === "IFCREPRESENTATIONMAP") {
           const shapeRepId = map.args[1]?.replace(/^#/, "");
           const shapeRep = this.parser.entities.get(shapeRepId);
+
           if (shapeRep && shapeRep.type === "IFCSHAPEREPRESENTATION") {
             const items = shapeRep.args[3]?.replace(/^$#/, "").split(",#");
             if (items) {
@@ -127,11 +159,31 @@ export class IFC4Geometry {
       if (entity.type === "IFCLOCALPLACEMENT") {
         const placementId = entity.args[1]?.replace(/^#/, "");
         const placement = this.parser.entities.get(placementId);
+
         if (placement && placement.type === "IFCAXIS2PLACEMENT3D") {
-          console.log("Menemukan IFCLOCALPLACEMENT:", id);
-          // Di sini tambahkan logika transformasi jika diperlukan
+          const locationId = placement.args[0]?.replace(/^#/, "");
+          const zAxisId = placement.args[1]?.replace(/^#/, "");
+          const xAxisId = placement.args[2]?.replace(/^#/, "");
+
+          const location = this.pointMap.get(locationId);
+          const zAxis = this.pointMap.get(zAxisId);
+          const xAxis = this.pointMap.get(xAxisId);
+
+          if (location !== undefined) {
+            const offset = [
+              this.vertices[location * 3],
+              this.vertices[location * 3 + 1],
+              this.vertices[location * 3 + 2],
+            ];
+            this._applyPlacement(offset);
+          }
         }
       }
     }
+  }
+
+  _applyPlacement(offset) {
+    // Di sini Anda bisa tambahkan logika transformasi matriks
+    console.log("IFC4: Menerapkan transformasi ke", offset);
   }
 }
