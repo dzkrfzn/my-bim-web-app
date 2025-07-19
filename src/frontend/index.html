@@ -1,5 +1,4 @@
 <!-- src/frontend/index.html -->
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -41,6 +40,8 @@
           const file = e.target.files[0];
           if (file && file.name.endsWith(".ifc")) {
             await engine.loadIFC(file);
+          } else {
+            alert("Silakan pilih file IFC yang valid.");
           }
         });
     </script>

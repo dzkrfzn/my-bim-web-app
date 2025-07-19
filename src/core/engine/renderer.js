@@ -2,9 +2,6 @@
 
 import { mat4 } from "../lib/gl-matrix-module.js";
 
-/**
- * Class Renderer: Mengelola rendering WebGL menggunakan program shader sederhana.
- */
 export class Renderer {
   constructor(gl) {
     this.gl = gl;
@@ -27,13 +24,9 @@ export class Renderer {
     this.initMatrices();
   }
 
-  /**
-   * Membuat program shader (vertex + fragment)
-   */
   createProgram() {
     const gl = this.gl;
 
-    // Vertex Shader
     const vertexShader = gl.createShader(gl.VERTEX_SHADER);
     gl.shaderSource(
       vertexShader,
@@ -46,75 +39,67 @@ export class Renderer {
         `
     );
     gl.compileShader(vertexShader);
+    if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+      console.error("Vertex shader error:", gl.getShaderInfoLog(vertexShader));
+    }
 
-    // Fragment Shader
     const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
     gl.shaderSource(
       fragmentShader,
       `
             precision mediump float;
             void main() {
-                gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); // Merah
+                gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
             }
         `
     );
     gl.compileShader(fragmentShader);
+    if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+      console.error(
+        "Fragment shader error:",
+        gl.getShaderInfoLog(fragmentShader)
+      );
+    }
 
-    // Gabungkan shader ke dalam program
     const program = gl.createProgram();
     gl.attachShader(program, vertexShader);
     gl.attachShader(program, fragmentShader);
     gl.linkProgram(program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      console.error("Program link error:", gl.getProgramInfoLog(program));
+    }
 
     return program;
   }
 
-  /**
-   * Inisialisasi matriks perspektif dan view
-   */
   initMatrices() {
     const gl = this.gl;
     const canvas = gl.canvas;
 
-    // Matriks perspektif
     mat4.perspective(
       this.projectionMatrix,
-      Math.PI / 4, // FOV 45 derajat
+      Math.PI / 4,
       canvas.clientWidth / canvas.clientHeight,
-      0.1, // Near
-      100 // Far
+      0.1,
+      100
     );
 
-    // Matriks kamera
-    mat4.lookAt(
-      this.viewMatrix,
-      [0, 0, 5], // Eye
-      [0, 0, 0], // Target
-      [0, 1, 0] // Up
-    );
-
-    // Matriks model (identity awal)
+    mat4.lookAt(this.viewMatrix, [0, 0, 5], [0, 0, 0], [0, 1, 0]);
     mat4.identity(this.modelMatrix);
   }
 
-  /**
-   * Update matriks MVP (Model-View-Projection)
-   */
   updateMVP() {
     mat4.multiply(this.mvpMatrix, this.viewMatrix, this.modelMatrix);
     mat4.multiply(this.mvpMatrix, this.projectionMatrix, this.mvpMatrix);
   }
 
-  /**
-   * Fungsi utama untuk rendering
-   */
   render(vertices, indices) {
     const gl = this.gl;
 
     // Aktifkan program shader
     gl.useProgram(this.program);
 
-    // Buat dan bind buffer vertex
+    // Buat buffer vertex
     const vertexBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
@@ -130,7 +115,7 @@ export class Renderer {
       0
     );
 
-    // Buat dan bind buffer index
+    // Buat buffer index
     const indexBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);

@@ -15,6 +15,11 @@ export class Engine {
   }
 
   async loadIFC(file) {
+    if (!file || !file.name.endsWith(".ifc")) {
+      console.error("File tidak valid atau bukan file IFC.");
+      return;
+    }
+
     const text = await file.text();
     const parser = new IFCParser();
     parser.parse(text);

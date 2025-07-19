@@ -20,7 +20,6 @@ export class IFCEntity {
   }
 
   extractAttributes(args) {
-    // Sederhana: ambil beberapa atribut pertama
     return {
       name: args[0]?.replace(/^'(.*)'$/, "$1") || "Unnamed",
       description: args[1]?.replace(/^'(.*)'$/, "$1") || "",

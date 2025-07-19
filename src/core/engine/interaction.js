@@ -2,9 +2,6 @@
 
 import { mat4 } from "../lib/gl-matrix-module.js";
 
-/**
- * Class untuk menangani interaksi pengguna dengan kamera 3D
- */
 export class Interaction {
   constructor(canvas, renderer) {
     this.canvas = canvas;
@@ -29,7 +26,6 @@ export class Interaction {
   }
 
   onMouseDown(e) {
-    // Shift + klik atau klik tengah untuk mulai dragging
     if (e.shiftKey || e.button === 1) {
       this.isDragging = true;
       this.lastX = e.clientX;
@@ -49,7 +45,6 @@ export class Interaction {
       this.yaw += dx * 0.01;
       this.pitch += dy * 0.01;
 
-      // Batasi pitch agar kamera tidak terbalik
       this.pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.pitch));
 
       this.lastX = e.clientX;
@@ -60,22 +55,18 @@ export class Interaction {
   }
 
   onWheel(e) {
-    // Zoom menggunakan scroll
     this.distance *= e.deltaY < 0 ? 0.9 : 1.1;
     this.updateCamera();
   }
 
   updateCamera() {
     const { pitch, yaw, distance } = this;
-
-    // Hitung posisi kamera berdasarkan yaw dan pitch
     const eye = [
       distance * Math.cos(pitch) * Math.sin(yaw),
       distance * Math.sin(pitch),
       distance * Math.cos(pitch) * Math.cos(yaw),
     ];
 
-    // Update view matrix
     mat4.lookAt(this.renderer.viewMatrix, eye, [0, 0, 0], [0, 1, 0]);
     this.renderer.updateMVP();
   }

@@ -8,9 +8,8 @@ export class IFCGeometry {
   }
 
   extractGeometry() {
-    const pointMap = new Map(); // { id: index }
+    const pointMap = new Map();
 
-    // Simpan semua titik
     for (const [id, entity] of this.parser.entities) {
       if (entity.type === "IFCCARTESIANPOINT") {
         const coords = entity.args.map(Number);
@@ -20,14 +19,17 @@ export class IFCGeometry {
       }
     }
 
-    // Contoh sederhana: ekstrak IFCPOLYLOOP
     for (const [id, entity] of this.parser.entities) {
       if (entity.type === "IFCPOLYLOOP") {
-        const points = entity.args.map((id) =>
-          pointMap.get(id.replace(/^#/, ""))
-        );
+        const points = entity.args.map((arg) => arg.replace(/^#/, ""));
         for (let i = 1; i < points.length - 1; i++) {
-          this.indices.push(points[0], points[i], points[i + 1]);
+          const p0 = pointMap.get(points[0]);
+          const p1 = pointMap.get(points[i]);
+          const p2 = pointMap.get(points[i + 1]);
+
+          if (p0 !== undefined && p1 !== undefined && p2 !== undefined) {
+            this.indices.push(p0, p1, p2);
+          }
         }
       }
     }

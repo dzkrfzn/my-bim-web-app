@@ -2,7 +2,7 @@
 
 export class IFCParser {
   constructor() {
-    this.entities = new Map(); // { id: { type, args } }
+    this.entities = new Map();
   }
 
   parse(data) {
@@ -25,8 +25,9 @@ export class IFCParser {
   }
 
   parseArgs(content) {
+    if (!content) return [];
     const match = content.match(/^\w+$(.*?)$/);
     if (!match) return [];
-    return match[1].split(",").map((arg) => arg.trim());
+    return match[1].split(",").map((arg) => arg.trim().replace(/^'|'$/g, ""));
   }
 }
