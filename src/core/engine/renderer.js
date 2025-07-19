@@ -5,7 +5,6 @@ import { mat4 } from "../lib/gl-matrix-module.js";
 export class Renderer {
   constructor(gl) {
     this.gl = gl;
-
     this.program = this.createProgram();
     this.positionAttributeLocation = gl.getAttribLocation(
       this.program,
@@ -81,9 +80,8 @@ export class Renderer {
       Math.PI / 4,
       canvas.clientWidth / canvas.clientHeight,
       0.1,
-      100
+      100000
     );
-
     mat4.lookAt(this.viewMatrix, [0, 0, 5], [0, 0, 0], [0, 1, 0]);
     mat4.identity(this.modelMatrix);
   }
@@ -96,15 +94,16 @@ export class Renderer {
   render(vertices, indices) {
     const gl = this.gl;
 
-    // Aktifkan program shader
     gl.useProgram(this.program);
 
-    // Buat buffer vertex
     const vertexBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
-    // Aktifkan atribut posisi
+    const indexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+
     gl.enableVertexAttribArray(this.positionAttributeLocation);
     gl.vertexAttribPointer(
       this.positionAttributeLocation,
@@ -115,15 +114,8 @@ export class Renderer {
       0
     );
 
-    // Buat buffer index
-    const indexBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
-
-    // Kirim matriks ke shader
     gl.uniformMatrix4fv(this.matrixUniformLocation, false, this.mvpMatrix);
 
-    // Gambar model
     gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
   }
 }

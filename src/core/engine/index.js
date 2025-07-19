@@ -20,18 +20,26 @@ export class Engine {
       return;
     }
 
+    console.log("Memulai parsing file IFC...");
     const text = await file.text();
     const parser = new IFCParser();
-    parser.parse(text);
+    await parser.parse(text);
 
     const geometry = new IFCGeometry(parser);
     const { vertices, indices } = geometry.extractGeometry();
 
-    const entities = new IFCEntity(parser);
-    const elements = entities.extractElements();
+    const entity = new IFCEntity(parser);
+    const elements = entity.extractElements();
 
-    console.log("Elements:", elements);
+    console.log("Parsing selesai. Menampilkan metadata elemen:");
+    console.table(elements.slice(0, 10));
 
+    if (vertices.length === 0 || indices.length === 0) {
+      console.warn("Tidak ada geometri yang dapat dirender.");
+      return;
+    }
+
+    this.interaction.fitToView(vertices);
     this.renderer.render(vertices, indices);
   }
 }

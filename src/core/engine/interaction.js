@@ -44,7 +44,6 @@ export class Interaction {
 
       this.yaw += dx * 0.01;
       this.pitch += dy * 0.01;
-
       this.pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.pitch));
 
       this.lastX = e.clientX;
@@ -69,5 +68,35 @@ export class Interaction {
 
     mat4.lookAt(this.renderer.viewMatrix, eye, [0, 0, 0], [0, 1, 0]);
     this.renderer.updateMVP();
+  }
+
+  fitToView(vertices) {
+    if (!vertices || vertices.length < 3) return;
+
+    let minX = Infinity,
+      minY = Infinity,
+      minZ = Infinity;
+    let maxX = -Infinity,
+      maxY = -Infinity,
+      maxZ = -Infinity;
+
+    for (let i = 0; i < vertices.length; i += 3) {
+      minX = Math.min(minX, vertices[i]);
+      minY = Math.min(minY, vertices[i + 1]);
+      minZ = Math.min(minZ, vertices[i + 2]);
+      maxX = Math.max(maxX, vertices[i]);
+      maxY = Math.max(maxY, vertices[i + 1]);
+      maxZ = Math.max(maxZ, vertices[i + 2]);
+    }
+
+    const center = [(minX + maxX) / 2, (minY + maxY) / 2, (minZ + maxZ) / 2];
+
+    const size = Math.max(maxX - minX, maxY - minY, maxZ - minZ);
+    this.distance = size * 2;
+
+    this.yaw = 0;
+    this.pitch = 0;
+
+    this.updateCamera();
   }
 }

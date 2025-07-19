@@ -16,6 +16,8 @@ export class IFCEntity {
         });
       }
     }
+
+    console.log("Metadata BIM: Jumlah elemen:", this.elements.length);
     return this.elements;
   }
 

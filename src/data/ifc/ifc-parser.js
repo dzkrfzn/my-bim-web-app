@@ -1,33 +1,24 @@
 // src/data/ifc/ifc-parser.js
 
+import { IFCVersionResolver } from "./ifc-identifier.js";
+
 export class IFCParser {
   constructor() {
     this.entities = new Map();
   }
 
-  parse(data) {
-    const lines = data.split("\n");
-    for (let line of lines) {
-      line = line.trim();
-      if (!line.startsWith("#") || !line.endsWith(";")) continue;
+  async parse(data) {
+    const version = IFCVersionResolver.detectIFCVersion(data);
+    console.log("Versi IFC terdeteksi:", version);
 
-      const idMatch = line.match(/^#(\d+)/);
-      if (!idMatch) continue;
-
-      const id = idMatch[1];
-      const content = line.slice(idMatch[0].length + 1, -1).trim();
-      const [type, ...rest] = content.split("=");
-      const args = this.parseArgs(rest.join("=").trim());
-
-      this.entities.set(id, { type: type.trim(), args });
-    }
+    const parser = IFCVersionResolver.getParser(version);
+    this.entities = parser.parse(data);
     return this.entities;
   }
 
-  parseArgs(content) {
-    if (!content) return [];
-    const match = content.match(/^\w+$(.*?)$/);
-    if (!match) return [];
-    return match[1].split(",").map((arg) => arg.trim().replace(/^'|'$/g, ""));
+  extractGeometry() {
+    const version = IFCVersionResolver.detectIFCVersion(""); // harus diambil dari data sebenarnya
+    const geometry = IFCVersionResolver.getGeometry(version, this);
+    return geometry.extractGeometry();
   }
 }

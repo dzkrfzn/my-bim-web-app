@@ -1,11 +1,11 @@
-// src/data/ifc/ifc-geometry.js
+// src/data/ifc/schemas/ifc4_3/geometry.js
 
-export class IFCGeometry {
+export class IFC4_3Geometry {
   constructor(parser) {
     this.parser = parser;
     this.vertices = [];
     this.indices = [];
-    this.pointMap = new Map(); // { id: index }
+    this.pointMap = new Map();
   }
 
   extractGeometry() {
@@ -17,11 +17,9 @@ export class IFCGeometry {
 
     const hasGeometry = this.vertices.length > 0 && this.indices.length > 0;
     if (!hasGeometry) {
-      console.warn("Tidak ada geometri yang dapat dirender.");
+      console.warn("IFC4.3: Tidak ada geometri yang dapat dirender.");
     } else {
-      console.log("Geometri berhasil diekstraksi.");
-      console.log("Vertices:", this.vertices);
-      console.log("Indices:", this.indices);
+      console.log("IFC4.3: Geometri berhasil diekstraksi.");
     }
 
     return {
@@ -39,7 +37,7 @@ export class IFCGeometry {
         this.pointMap.set(id, index);
       }
     }
-    console.log("IFCCARTESIANPOINT: Jumlah titik:", this.pointMap.size);
+    console.log("IFC4.3: Jumlah titik:", this.pointMap.size);
   }
 
   _parseArbitraryClosedProfileDef() {
@@ -70,18 +68,15 @@ export class IFCGeometry {
       }
     }
 
+    this._extrudedProfiles = this._extrudedProfiles || new Map();
     this._extrudedProfiles.set(parentId, indices);
   }
 
   _parseExtrudedAreaSolid() {
-    this._extrudedProfiles = new Map(); // { id: indices }
-
+    this._extrudedProfiles = this._extrudedProfiles || new Map();
     for (const [id, entity] of this.parser.entities) {
       if (entity.type.startsWith("IFCEXTRUDEDAREASOLID")) {
         const profileId = entity.args[0]?.replace(/^#/, "");
-        const directionId = entity.args[2]?.replace(/^#/, "");
-        const length = parseFloat(entity.args[3]);
-
         if (profileId && this._extrudedProfiles.has(profileId)) {
           const indices = this._extrudedProfiles.get(profileId);
           this.indices.push(...indices);
@@ -98,10 +93,7 @@ export class IFCGeometry {
           items.forEach((itemId) => {
             const item = this.parser.entities.get(itemId);
             if (item && item.type.startsWith("IFCEXTRUDEDAREASOLID")) {
-              console.log(
-                "IFCSHAPEREPRESENTATION: Menemukan ekstrusi:",
-                itemId
-              );
+              console.log("IFC4.3: Menemukan ekstrusi:", itemId);
             }
           });
         }
@@ -118,7 +110,7 @@ export class IFCGeometry {
         const map = this.parser.entities.get(mapId);
         if (map?.type === "IFCREPRESENTATIONMAP") {
           const placement = this.parser.entities.get(placementId);
-          console.log("IFCMAPPEDITEM: Menemukan pemetaan:", mapId);
+          console.log("IFC4.3: Menemukan pemetaan:", mapId);
         }
       }
     }
